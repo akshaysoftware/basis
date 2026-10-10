@@ -1,15 +1,15 @@
-# Bloch Basis
+# Basis
 
-Bloch Basis is a modern, open-source programming language for quantum software.
+Basis (previously Bloch) is a modern, open-source programming language for quantum software.
 
-This repository contains the current development version of the Bloch language and compiler.
+This repository contains the current development version of the Basis language and compiler.
 
-> **Status:** Bloch Basis is under active pre-1.0 development. Language syntax, compiler interfaces,
+> **Status:** Basis is under active pre-1.0 development. Language syntax, compiler interfaces,
 > package formats and internal representations may change between releases.
 
 ## Development
 
-Bloch Basis requires:
+Basis requires:
 
 - a C++20-compatible compiler
 - CMake 3.28 or later
@@ -42,11 +42,11 @@ Run:
 ## Development conventions
 
 C++ development conventions are documented in the
-[Bloch Basis C++ Style Guide](docs/cpp-style.md).
+[Basis C++ Style Guide](docs/cpp-style.md).
 
 ## Project history
 
-Bloch Basis was originally named "Bloch" and developed in the
+Basis was originally named "Bloch" and developed in the
 [`bloch-labs/bloch-legacy`](https://github.com/bloch-labs/bloch-legacy)
 repository.
 
@@ -59,4 +59,4 @@ Development restarted in this repository in August 2026 with a refreshed compile
 
 ## License
 
-Bloch Basis is licensed under the Apache License 2.0.
+Basis is licensed under the Apache License 2.0.

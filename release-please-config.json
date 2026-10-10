@@ -11,7 +11,7 @@
   "packages": {
     ".": {
       "release-type": "simple",
-      "package-name": "bloch"
+      "package-name": "basis"
     }
   }
 }

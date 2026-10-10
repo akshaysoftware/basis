@@ -1,6 +1,6 @@
-# Bloch Basis C++ Style Guide
+# Basis C++ Style Guide
 
-This document defines the C++ conventions used by Bloch Basis.
+This document defines the C++ conventions used by Basis.
 
 The goal is not to create an exhaustive set of rules. Code should be readable, predictable,
 safe and straightforward to maintain. Where this guide does not specify a convention, prefer
@@ -8,7 +8,7 @@ established modern C++ practices and consistency with the surrounding code.
 
 ## C++ version
 
-Bloch Basis targets **C++20**.
+Basis targets **C++20**.
 
 Compiler-specific language extensions should not be used unless there is a clear portability
 reason for doing so.
@@ -359,7 +359,7 @@ explicit Parser(std::vector<Token> tokens);
 
 ## CMake
 
-Bloch Basis uses target-based CMake.
+Basis uses target-based CMake.
 
 Prefer:
 

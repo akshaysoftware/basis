@@ -1,6 +1,6 @@
 # Casting
 
-Bloch supports explicit casts using parentheses and performs implicit float promotion for
+Basis supports explicit casts using parentheses and performs implicit float promotion for
 division (for example, `1/2` yields `0.5f`).
 
 ## Syntax

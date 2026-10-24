@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,11 +25,11 @@
 
 namespace bloch::cli {
 
-    struct Context {
-        std::string_view version = BLOCH_VERSION;
-        std::string_view commit = BLOCH_COMMIT_HASH;
-    };
+struct Context {
+    std::string_view version = BLOCH_VERSION;
+    std::string_view commit = BLOCH_COMMIT_HASH;
+};
 
-    int run(int argc, char** argv, const Context& ctx = {});
+int run(int argc, char** argv, const Context& ctx = {});
 
 }  // namespace bloch::cli

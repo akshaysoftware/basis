@@ -1,6 +1,6 @@
 # Errors & Diagnostics
 
-The Bloch interpreter reports errors with 1-based line and column numbers. It exits with a non-zero code on lexical, parse, semantic, or runtime errors.
+The Basis interpreter reports errors with 1-based line and column numbers. It exits with a non-zero code on lexical, parse, semantic, or runtime errors.
 
 ## Reading error messages
 

@@ -3,7 +3,6 @@ authors:
 - family-names: Pal
   given-names: Akshay
   orcid: "https://orcid.org/0009-0004-0465-4420"
-doi: 10.5281/zenodo.18407424
 message: If you use this software, please cite our article in the
   Journal of Open Source Software.
 preferred-citation:
@@ -24,5 +23,5 @@ preferred-citation:
   type: article
   url: "https://joss.theoj.org/papers/10.21105/joss.09625"
   volume: 11
-title: "Bloch: a strongly typed, hardware-agnostic, hybrid quantum
-  programming language"
+title: "Basis"
+url: "https://github.com/akshaysoftware/basis"

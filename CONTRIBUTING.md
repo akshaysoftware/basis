@@ -1,40 +1,47 @@
-# Contributing
+# Contributing to Basis
 
-Thanks for your interest in contributing to Bloch! Please check the issues tab for open work
-or file a new issue if you spot a bug or have an idea.
+Bug reports, documentation improvements and focused code contributions are welcome.
+Discuss significant language or architecture changes in an issue before implementing them.
 
-## Start here
-- `engineering/reference/how-to-contribute.md`
-- `engineering/reference/codebase-overview.md`
+## Set up
 
-## Building from source
+Install a C++20 compiler, CMake 3.28+, Ninja, Bash, just and clang-format 18.
+Fork the repository if you do not have write access, then clone your fork.
 
-### Linux/macOS
 ```bash
-git clone https://github.com/bloch-labs/bloch.git
-cd bloch
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
+git clone https://github.com/YOUR-USERNAME/basis.git
+cd basis
+git remote add upstream https://github.com/akshaysoftware/basis.git
+git switch -c fix/describe-the-change
+just build
 ```
 
-Run the compiler against an example with `./build/bin/bloch examples/02_bell_state.bloch`.
+## Development
 
-### Windows (Visual Studio)
-```powershell
-git clone https://github.com/bloch-labs/bloch.git
-cd bloch
-cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release --parallel
-ctest --test-dir build --config Release --output-on-failure
+`main` is the trunk. Create a short-lived branch for each change and open a PR to
+`main`. Keep changes focused and add regression coverage for changed behaviour.
+
+```bash
+just format
+just check
+git diff --check
 ```
 
-This produces a `build/Bloch.sln` you can open directly in Visual Studio for editing and
-debugging. The `bloch.exe` binary is placed in `build/bin/Release/`.
+`just check` checks formatting, builds with warnings as errors, runs tests and
+examples, and checks an installation from outside the source checkout.
+See [the C++ style guide](docs/cpp-style.md) and [architecture](docs/architecture.md).
 
-## Documentation expectations
+Use a Conventional Commit PR title, for example `fix: reject invalid gate operands`,
+`feat: add seeded simulation` or `docs: clarify module imports`.
+PRs are squash merged; their title becomes the commit title.
 
-When behaviour changes, update the matching docs in the same pull request:
-- User docs: `docs/`
-- Contributor references: `engineering/reference/`
-- Design/decision records when architecture intent changes: `engineering/designs/` and `engineering/adrs/`
+After your PR merges, delete the feature branch and update from `main`.
+For substantial behaviour changes, update the relevant documentation and changelog.
+
+## Reporting problems
+
+Include the Basis version or commit, operating system, command, minimal program,
+expected result and actual diagnostic. Follow [SECURITY.md](SECURITY.md) for private
+security reports and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) in project spaces.
+
+Contributions are made under the project's Apache-2.0 license.

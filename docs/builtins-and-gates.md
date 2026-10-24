@@ -1,6 +1,6 @@
 # Built-ins and Quantum Gates
 
-This page is the single reference for built-in functions and quantum operations in Bloch. For full language rules, see the [Language Specification](./language-spec.md).
+This page is the single reference for built-in functions and quantum operations in Basis. For full language rules, see the [Language Specification](./language-spec.md).
 
 ## Built-in function
 

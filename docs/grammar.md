@@ -1,4 +1,4 @@
-# Bloch Grammar (EBNF)
+# Basis Grammar (EBNF)
 
 This grammar reflects the current parser. Some constraints (such as valid type casts, `@shots`
 placement, or `super(...)` rules) are enforced semantically; see `language-spec.md`.

@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,39 +18,40 @@
 #include <complex>
 #include <string>
 #include <vector>
+
 #include "bloch/support/error/bloch_error.hpp"
 
 namespace bloch::runtime {
 
-    // An ideal statevector simulator with a QASM log.
-    // TODO: performance optimisation post 1.0.0
-    class QasmSimulator {
-       public:
-        explicit QasmSimulator(bool logOps = true) : m_logOps(logOps) {}
-        int allocateQubit();
-        void h(int q);
-        void x(int q);
-        void y(int q);
-        void z(int q);
-        void rx(int q, double theta);
-        void ry(int q, double theta);
-        void rz(int q, double theta);
-        void cx(int control, int target);
-        void reset(int q);
-        int measure(int q);
-        std::string getQasm() const;
-        size_t stateSize() const { return m_state.size(); }
+// An ideal statevector simulator with a QASM log.
+// TODO: performance optimisation post 1.0.0
+class QasmSimulator {
+   public:
+    explicit QasmSimulator(bool logOps = true) : m_logOps(logOps) {}
+    int allocateQubit();
+    void h(int q);
+    void x(int q);
+    void y(int q);
+    void z(int q);
+    void rx(int q, double theta);
+    void ry(int q, double theta);
+    void rz(int q, double theta);
+    void cx(int control, int target);
+    void reset(int q);
+    int measure(int q);
+    std::string getQasm() const;
+    size_t stateSize() const { return m_state.size(); }
 
-       private:
-        int m_qubits = 0;
-        std::vector<std::complex<double>> m_state{1};
-        std::vector<std::string> m_ops;
-        bool m_logOps = true;
-        std::vector<bool> m_measured;
+   private:
+    int m_qubits = 0;
+    std::vector<std::complex<double>> m_state{1};
+    std::vector<std::string> m_ops;
+    bool m_logOps = true;
+    std::vector<bool> m_measured;
 
-        // Apply a 2x2 unitary to qubit q.
-        void applySingleQubitGate(int q, const std::array<std::complex<double>, 4>& m);
-        void ensureQubitActive(int q) const;
-    };
+    // Apply a 2x2 unitary to qubit q.
+    void applySingleQubitGate(int q, const std::array<std::complex<double>, 4>& m);
+    void ensureQubitActive(int q) const;
+};
 
 }  // namespace bloch::runtime

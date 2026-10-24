@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,15 +17,16 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+
 #include "bloch/compiler/semantics/type_system.hpp"
 
 namespace bloch::compiler {
-    // Built-in gate signatures used by the semantic pass and runtime dispatch.
-    struct BuiltInGate {
-        std::string name;
-        std::vector<ValueType> paramTypes;
-        ValueType returnType;
-    };
+// Built-in gate signatures used by the semantic pass and runtime dispatch.
+struct BuiltInGate {
+    std::string name;
+    std::vector<ValueType> paramTypes;
+    ValueType returnType;
+};
 
-    extern const std::unordered_map<std::string, BuiltInGate> builtInGates;
+extern const std::unordered_map<std::string, BuiltInGate> builtInGates;
 }  // namespace bloch::compiler

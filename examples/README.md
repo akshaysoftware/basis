@@ -1,17 +1,17 @@
-# Bloch Examples
+# Basis Examples
 
-This folder contains small example Bloch programs designed to teach syntax and help you get started with algorithm creation in Bloch.
+This folder contains small example Basis programs designed to teach syntax and help you get started with algorithm creation in Basis.
 
 ## How to run
 
-Bloch executes a single `.bloch` file at a time.
+Basis executes a single `.bloch` file at a time.
 
 ```bash
 # Single run (default is 1 shot)
-bloch examples/01_hadamard.bloch
+basis examples/01_hadamard.bloch
 
 # Multi-shot run (aggregates results across shots)
-bloch examples/01_hadamard.bloch --shots=1024
+basis examples/01_hadamard.bloch --shots=1024
 ```
 
 **Notes**
@@ -36,14 +36,14 @@ bloch examples/01_hadamard.bloch --shots=1024
 
 **Try:**
 ```bash
-bloch examples/01_hadamard.bloch --shots=1024
+basis examples/01_hadamard.bloch --shots=1024
 ```
 
 **Expected output:**
 ```
 [INFO]: suppressing echo; to view them use --echo=all
 Shots: 1024
-Backend: Bloch Ideal Simulator
+Backend: Basis Ideal Simulator
 Elapsed: 0.003s
 
 qubit q
@@ -59,14 +59,14 @@ outcome | count |  prob
 
 **Try:**
 ```bash
-bloch examples/02_bell_state.bloch --shots=1024
+basis examples/02_bell_state.bloch --shots=1024
 ```
 
 **Expected output:**
 ```
 [INFO]: suppressing echo; to view them use --echo=all
 Shots: 1024
-Backend: Bloch Ideal Simulator
+Backend: Basis Ideal Simulator
 Elapsed: 0.010s
 
 qubit[] qreg
@@ -82,7 +82,7 @@ outcome | count |  prob
 
 **Try:**
 ```bash
-bloch examples/03_deutsch_jozsa.bloch
+basis examples/03_deutsch_jozsa.bloch
 ```
 
 **Expected output:**
@@ -101,14 +101,14 @@ Deutsch-Jozsa balanced oracle measurement:
 
 **Try:**
 ```bash
-bloch examples/04_grover_search.bloch --shots=1024
+basis examples/04_grover_search.bloch --shots=1024
 ```
 
 **Expected output:**
 ```
 [INFO]: suppressing echo; to view them use --echo=all
 Shots: 1024
-Backend: Bloch Ideal Simulator
+Backend: Basis Ideal Simulator
 Elapsed: 0.147s
 
 qubit[] data
@@ -125,7 +125,7 @@ outcome | count |  prob
 
 **Try:**
 ```bash
-bloch examples/05_teleport_class.bloch --shots=512
+basis examples/05_teleport_class.bloch --shots=512
 ```
 
 Prepares a |+> state to teleport, builds a Bell pair via the `Teleporter` class, measures the sender, and applies classical corrections to the receiver.  
@@ -141,7 +141,7 @@ Across many shots, the receiver’s outcome matches the input state (here |+>, s
 
 **Try:**
 ```bash
-bloch examples/06_maxcut_c4_class.bloch --shots=1024
+basis examples/06_maxcut_c4_class.bloch --shots=1024
 ```
 
 Encapsulates a p=1 QAOA for the 4-node cycle. Constructor captures `(gamma, beta)`; `run` builds |+>^4, applies the cost on edges (0,1), (1,2), (2,3), (3,0), then a mixer.  
@@ -153,7 +153,7 @@ Encapsulates a p=1 QAOA for the 4-node cycle. Constructor captures `(gamma, beta
 
 **Try:**
 ```bash
-bloch examples/07_null_demo.bloch
+basis examples/07_null_demo.bloch
 ```
 
 This example demonstrates null reference in a user created class. While primitives are non-nullable, class members can be initialised to null.
@@ -164,7 +164,7 @@ This example demonstrates null reference in a user created class. While primitiv
 
 **Try:**
 ```bash
-bloch examples/08_generics.bloch
+basis examples/08_generics.bloch
 ```
 
 This demonstrates the usage of generics in user classes. 
@@ -175,7 +175,7 @@ This demonstrates the usage of generics in user classes.
 
 **Try:**
 ```bash
-bloch examples/09_generic_inheritance.bloch
+basis examples/09_generic_inheritance.bloch
 ```
 
 `MeasuredReadout` extends `Sample<bit>`. Its `super(measured)` call is an
@@ -190,7 +190,7 @@ acceptance example for generic inheritance: the compiler must substitute
 Shows how to split code across files: `main.bloch` imports the static `QuantumMath` helper from `package com.example` and uses it to estimate a two-level system’s energy gap and phase accumulation.  
 **Try:**
 ```bash
-bloch examples/multifile/main.bloch
+basis examples/multifile/main.bloch
 ```
 **Expected output (representative):**
 ```
@@ -202,7 +202,7 @@ Phase after 100 us (rad): 125663.7030
 ## FAQ
 
 **Do I need a `main()` function?**  
-Yes. The Bloch runtime looks up a function literally named `main` and uses it as the entry point. Any other functions you define have to be called (directly or indirectly) from `main`, otherwise they are never executed. `@tracked` counts are collected when a scope ends, so without running `main` the tracked qubits never leave scope and nothing is printed.
+Yes. The Basis runtime looks up a function literally named `main` and uses it as the entry point. Any other functions you define have to be called (directly or indirectly) from `main`, otherwise they are never executed. `@tracked` counts are collected when a scope ends, so without running `main` the tracked qubits never leave scope and nothing is printed.
 
 **What does `@tracked` do?**  
 It aggregates measurement outcomes for the annotated qubit array across shots and prints counts/probabilities.

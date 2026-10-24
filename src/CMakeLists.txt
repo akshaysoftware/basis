@@ -1,105 +1,134 @@
-# Prefer static OpenSSL to avoid a runtime dependency; fall back to shared if
-# static libraries are unavailable. Release artifacts can force static by
-# ensuring libssl.a/libcrypto.a are present.
-set(OpenSSL_USE_STATIC_LIBS ON)
-find_package(OpenSSL QUIET)
-if(NOT OpenSSL_FOUND)
-    set(OpenSSL_USE_STATIC_LIBS OFF)
-    find_package(OpenSSL REQUIRED)
-endif()
+find_package(Threads REQUIRED)
 
-# ---------------------------------------------------------------------------
-# Source layout by responsibility (compiler / runtime / cli / updater)
-# ---------------------------------------------------------------------------
-set(BLOCH_COMPILER_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/compiler/import/module_loader.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/compiler/lexer/lexer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/compiler/parser/parser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/compiler/semantics/built_ins.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/compiler/semantics/semantic_analyser.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/compiler/semantics/type_system.cpp
+add_library(
+    bloch_compiler
+    STATIC
+        bloch/compiler/import/module_loader.cpp
+        bloch/compiler/lexer/lexer.cpp
+        bloch/compiler/parser/parser.cpp
+        bloch/compiler/semantics/built_ins.cpp
+        bloch/compiler/semantics/semantic_analyser.cpp
+        bloch/compiler/semantics/type_system.cpp
 )
 
-set(BLOCH_RUNTIME_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/runtime/qasm_simulator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/runtime/runtime_evaluator.cpp
+add_library(bloch::compiler ALIAS bloch_compiler)
+
+target_compile_features(
+    bloch_compiler
+    PUBLIC
+        cxx_std_20
 )
 
-set(BLOCH_CLI_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/cli/cli.cpp
+target_include_directories(
+    bloch_compiler
+    PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-set(BLOCH_UPDATE_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/update/update_manager.cpp
+target_link_libraries(
+    bloch_compiler
+    PRIVATE
+        bloch::project_warnings
 )
 
-set(BLOCH_HTTP_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/bloch/http/http_client.cpp
+add_library(
+    bloch_runtime
+    STATIC
+        bloch/runtime/qasm_simulator.cpp
+        bloch/runtime/runtime_evaluator.cpp
 )
 
-# Shared headers and compile flags that are safe across all components.
-add_library(bloch_support INTERFACE)
-target_include_directories(bloch_support INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}
+add_library(bloch::runtime ALIAS bloch_runtime)
+
+target_compile_features(
+    bloch_runtime
+    PUBLIC
+        cxx_std_20
 )
 
-add_library(bloch_compiler ${BLOCH_COMPILER_SOURCES})
-target_link_libraries(bloch_compiler
-    PUBLIC bloch_support
+target_include_directories(
+    bloch_runtime
+    PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-add_library(bloch_runtime ${BLOCH_RUNTIME_SOURCES})
-target_link_libraries(bloch_runtime
-    PUBLIC bloch_compiler bloch_support
+target_link_libraries(
+    bloch_runtime
+    PUBLIC
+        bloch::compiler
+        Threads::Threads
+    PRIVATE
+        bloch::project_warnings
 )
 
-add_library(bloch_update ${BLOCH_UPDATE_SOURCES})
-target_link_libraries(bloch_update
-    PUBLIC bloch_support OpenSSL::SSL OpenSSL::Crypto
-)
-target_compile_definitions(bloch_update PRIVATE CPPHTTPLIB_OPENSSL_SUPPORT)
-
-add_library(bloch_http ${BLOCH_HTTP_SOURCES})
-target_link_libraries(bloch_http
-    PUBLIC bloch_support
+add_library(
+    bloch_cli
+    STATIC
+        bloch/cli/cli.cpp
 )
 
-add_library(bloch_cli ${BLOCH_CLI_SOURCES})
-target_link_libraries(bloch_cli
-    PUBLIC bloch_runtime bloch_update bloch_support
+add_library(bloch::cli ALIAS bloch_cli)
+
+target_compile_features(
+    bloch_cli
+    PUBLIC
+        cxx_std_20
 )
 
-target_compile_definitions(bloch_cli PUBLIC
-    BLOCH_VERSION="${BLOCH_VERSION}"
-    BLOCH_COMMIT_HASH="${BLOCH_COMMIT_HASH}"
+target_include_directories(
+    bloch_cli
+    PUBLIC
+        "${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-add_executable(bloch
+target_link_libraries(
+    bloch_cli
+    PUBLIC
+        bloch::runtime
+    PRIVATE
+        bloch::project_warnings
+)
+
+add_executable(
+    basis
     main.cpp
 )
 
-target_link_libraries(bloch
-    PRIVATE bloch_cli
+target_compile_features(
+    basis
+    PRIVATE
+        cxx_std_20
 )
 
-# Install targets for local development installs
-install(TARGETS bloch bloch_cli bloch_compiler bloch_runtime bloch_update bloch_http
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
+target_link_libraries(
+    basis
+    PRIVATE
+        bloch::cli
+        bloch::project_warnings
 )
 
-install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bloch
-    DESTINATION include
-    FILES_MATCHING PATTERN "*.hpp"
+set_target_properties(
+    bloch_compiler
+    bloch_runtime
+    bloch_cli
+    basis
+    PROPERTIES
+        CXX_EXTENSIONS OFF
 )
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/library/
-    DESTINATION share/bloch/library
-    OPTIONAL
+set_target_properties(
+    basis
+    PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/stdlib/
-    DESTINATION share/bloch/stdlib
-    OPTIONAL
+target_compile_definitions(bloch_cli PUBLIC
+    BLOCH_VERSION="${BASIS_VERSION}"
+    BLOCH_COMMIT_HASH="${BASIS_COMMIT}"
+)
+
+install(TARGETS basis RUNTIME DESTINATION bin)
+install(DIRECTORY "${PROJECT_SOURCE_DIR}/library/"
+    DESTINATION "share/basis/library"
+    FILES_MATCHING PATTERN "*.bloch"
 )

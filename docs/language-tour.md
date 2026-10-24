@@ -1,11 +1,11 @@
 # Language Tour
 
-This is a fast walk through Bloch syntax with small, runnable snippets.
+This is a fast walk through Basis syntax with small, runnable snippets.
 
 Start with the entry point:
 ```bloch
 function main() -> void {
-    echo("Hello, Bloch!");
+    echo("Hello, Basis!");
 }
 ```
 

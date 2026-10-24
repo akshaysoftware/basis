@@ -1,23 +1,21 @@
-# Style base
 BasedOnStyle: Google
+Language: Cpp
+Standard: c++20
 
-# Style
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
+
 ColumnLimit: 100
-BreakBeforeBraces: Attach
-SpaceBeforeParens: ControlStatements
+
+NamespaceIndentation: None
+FixNamespaceComments: true
+
 DerivePointerAlignment: false
 PointerAlignment: Left
+
 SortIncludes: true
-IncludeBlocks: Preserve
-AllowShortIfStatementsOnASingleLine: false
-NamespaceIndentation: All
-FixNamespaceComments: false
+IncludeBlocks: Regroup
 
-# C++ specific
-Language: Cpp
-
-# Quoting style
-AlwaysBreakTemplateDeclarations: Yes
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false

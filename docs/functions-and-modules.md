@@ -10,7 +10,7 @@ initialisation. Top-level functions are not overloadable.
 
 ## Annotations
 - `@quantum` marks functions that run quantum code and must return `bit`, `bit[]`, or `void`.
-- `@shots(N)` applies to `main()` to run multiple shots without passing `--shots=N` (CLI flag to be deprecated in v2.0.0).
+- `@shots(N)` applies to `main()` to run multiple shots without passing `--shots=N`.
 
 `@quantum` may not decorate `main()`.
 

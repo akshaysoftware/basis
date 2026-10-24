@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -423,7 +423,8 @@ TEST(RuntimeTest, TracksVariableMultipleShots) {
         RuntimeEvaluator eval;
         eval.execute(*program);
         for (const auto& vk : eval.trackedCounts())
-            for (const auto& vv : vk.second) agg[vk.first][vv.first] += vv.second;
+            for (const auto& vv : vk.second)
+                agg[vk.first][vv.first] += vv.second;
     }
     ASSERT_EQ(agg["qubit q"]["?"], 5);
 }

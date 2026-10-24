@@ -1,80 +1,54 @@
-cmake_minimum_required(VERSION 3.16)
-project(bloch LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.28)
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+project(
+    Basis
+    LANGUAGES CXX
+)
 
-# Default to an optimised build when no build type is provided (matches packaged binaries)
-if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+option(
+    BLOCH_WARNINGS_AS_ERRORS
+    "Treat compiler warnings as errors"
+    OFF
+)
+
+add_library(bloch_project_warnings INTERFACE)
+add_library(bloch::project_warnings ALIAS bloch_project_warnings)
+
+target_compile_options(
+    bloch_project_warnings
+    INTERFACE
+        "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall;-Wextra;-Wpedantic>"
+        "$<$<CXX_COMPILER_ID:MSVC>:/W4;/permissive->"
+)
+
+if(BLOCH_WARNINGS_AS_ERRORS)
+    target_compile_options(
+        bloch_project_warnings
+        INTERFACE
+            "$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Werror>"
+            "$<$<CXX_COMPILER_ID:MSVC>:/WX>"
+    )
 endif()
-message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
-
-# Determine version from CI tag or local git
-set(BLOCH_VERSION "unknown")
-if(DEFINED ENV{BLOCH_VERSION} AND NOT "$ENV{BLOCH_VERSION}" STREQUAL "")
-    # Explicit override (recommended in CI)
-    set(BLOCH_VERSION "$ENV{BLOCH_VERSION}")
-elseif(DEFINED ENV{GITHUB_REF_NAME} AND NOT "$ENV{GITHUB_REF_NAME}" STREQUAL "")
-    # GitHub Actions tag name when building a tagged release
-    set(BLOCH_VERSION "$ENV{GITHUB_REF_NAME}")
-elseif(DEFINED ENV{CI_COMMIT_TAG} AND NOT "$ENV{CI_COMMIT_TAG}" STREQUAL "")
-    # GitLab CI tag compatibility
-    set(BLOCH_VERSION "$ENV{CI_COMMIT_TAG}")
-else()
-    find_package(Git QUIET)
-    if(GIT_FOUND)
-        execute_process(
-            COMMAND ${GIT_EXECUTABLE} describe --tags --always --dirty=-modified
-            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-            OUTPUT_VARIABLE GIT_DESCRIBE
-            OUTPUT_STRIP_TRAILING_WHITESPACE
-            RESULT_VARIABLE GIT_DESCRIBE_RESULT
-        )
-        if(GIT_DESCRIBE_RESULT EQUAL 0 AND NOT "${GIT_DESCRIBE}" STREQUAL "")
-            set(BLOCH_VERSION "${GIT_DESCRIBE}")
-        endif()
-    endif()
-endif()
-message(STATUS "Bloch version: ${BLOCH_VERSION}")
-
-# Capture short commit hash if available (best-effort)
-set(BLOCH_COMMIT_HASH "unknown")
-if(NOT GIT_FOUND)
-    find_package(Git QUIET)
-endif()
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/version.txt" BASIS_VERSION LIMIT_COUNT 1)
+find_package(Git QUIET)
+set(BASIS_COMMIT "unknown")
 if(GIT_FOUND)
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        OUTPUT_VARIABLE BLOCH_COMMIT_HASH
+        COMMAND "${GIT_EXECUTABLE}" rev-parse --short HEAD
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        OUTPUT_VARIABLE BASIS_COMMIT
         OUTPUT_STRIP_TRAILING_WHITESPACE
-        RESULT_VARIABLE GIT_HASH_RESULT
     )
-    if(NOT GIT_HASH_RESULT EQUAL 0 OR "${BLOCH_COMMIT_HASH}" STREQUAL "")
-        set(BLOCH_COMMIT_HASH "unknown")
+    if(NOT BASIS_COMMIT)
+        set(BASIS_COMMIT "unknown")
     endif()
 endif()
-message(STATUS "Bloch commit: ${BLOCH_COMMIT_HASH}")
-
-
-# Treat warnings as errors
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(-Wall -Wextra -Werror -pedantic)
-endif()
-
-enable_testing()
 
 add_subdirectory(src)
-add_subdirectory(tests)
 
-# CPack packaging configuration (used in release builds)
-set(CPACK_PACKAGE_NAME "bloch")
-string(REGEX REPLACE "^v" "" CPACK_PACKAGE_VERSION "${BLOCH_VERSION}")
-set(CPACK_PACKAGE_VENDOR "Bloch Labs")
-set(CPACK_PACKAGE_CONTACT "hello@bloch-labs.com")
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Bloch Labs <hello@bloch-labs.com>")
-include(CPack)
+include(CTest)
+
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()

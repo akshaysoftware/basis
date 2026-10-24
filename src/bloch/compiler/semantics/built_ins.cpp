@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,15 +16,15 @@
 
 namespace bloch::compiler {
 
-    const std::unordered_map<std::string, BuiltInGate> builtInGates = {
-        {"h", BuiltInGate{"h", {ValueType::Qubit}, ValueType::Void}},
-        {"x", BuiltInGate{"x", {ValueType::Qubit}, ValueType::Void}},
-        {"y", BuiltInGate{"y", {ValueType::Qubit}, ValueType::Void}},
-        {"z", BuiltInGate{"z", {ValueType::Qubit}, ValueType::Void}},
-        {"rx", BuiltInGate{"rx", {ValueType::Qubit, ValueType::Float}, ValueType::Void}},
-        {"ry", BuiltInGate{"ry", {ValueType::Qubit, ValueType::Float}, ValueType::Void}},
-        {"rz", BuiltInGate{"rz", {ValueType::Qubit, ValueType::Float}, ValueType::Void}},
-        {"cx", BuiltInGate{"cx", {ValueType::Qubit, ValueType::Qubit}, ValueType::Void}},
-    };
+const std::unordered_map<std::string, BuiltInGate> builtInGates = {
+    {"h", BuiltInGate{"h", {ValueType::Qubit}, ValueType::Void}},
+    {"x", BuiltInGate{"x", {ValueType::Qubit}, ValueType::Void}},
+    {"y", BuiltInGate{"y", {ValueType::Qubit}, ValueType::Void}},
+    {"z", BuiltInGate{"z", {ValueType::Qubit}, ValueType::Void}},
+    {"rx", BuiltInGate{"rx", {ValueType::Qubit, ValueType::Float}, ValueType::Void}},
+    {"ry", BuiltInGate{"ry", {ValueType::Qubit, ValueType::Float}, ValueType::Void}},
+    {"rz", BuiltInGate{"rz", {ValueType::Qubit, ValueType::Float}, ValueType::Void}},
+    {"cx", BuiltInGate{"cx", {ValueType::Qubit, ValueType::Qubit}, ValueType::Void}},
+};
 
 }  // namespace bloch::compiler

@@ -181,12 +181,12 @@ experiments. Current use cases include:
 
 # Availability
 
-Bloch is openly developed at https://github.com/bloch-labs/bloch under the
+Bloch is openly developed at https://github.com/akshaysoftware/basis under the
 Apache-2.0 license. The repository bundles setup instructions, contribution
 guidelines, and a list of feature flags so that new contributors can propose
 language extensions while maintaining release stability. Pre-built binaries are available but
 not required; the CMake toolchain builds the CLI across major platforms, and the
-project's documentation hub (https://docs.bloch-labs.com) provides user guides and API
+project's documentation hub (https://github.com/akshaysoftware/basis/tree/main/docs) provides user guides and API
 notes.
 
 # Acknowledgements

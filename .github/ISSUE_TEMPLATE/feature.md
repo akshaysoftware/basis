@@ -1,17 +1,12 @@
 ---
-name: Feature
-about: Propose a new feature
-title: ''
-labels: 'feature'
-assignees: ''
-
+name: Feature proposal
+about: Propose a focused improvement
 ---
 
-**Problem Overview**
-A clear and concise description of the feature.
+**Problem or use case:**
 
-**Work Required**
-How will this be implemented (leave blank if unsure).
+**Proposed behaviour:**
 
-**Acceptance Criteria**
-What defines acceptance for this feature?
+**Example program or command:**
+
+**Alternatives considered:**

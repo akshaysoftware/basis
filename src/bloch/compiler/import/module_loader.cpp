@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,222 +26,210 @@
 
 namespace bloch::compiler {
 
-    using support::BlochError;
-    using support::ErrorCategory;
-    namespace fs = std::filesystem;
+using support::BlochError;
+using support::ErrorCategory;
+namespace fs = std::filesystem;
 
-    ModuleLoader::ModuleLoader(std::vector<std::string> searchPaths)
-        : m_searchPaths(std::move(searchPaths)) {}
+ModuleLoader::ModuleLoader(std::vector<std::string> searchPaths)
+    : m_searchPaths(std::move(searchPaths)) {}
 
-    std::string ModuleLoader::joinQualified(const std::vector<std::string>& parts) {
-        std::ostringstream oss;
-        for (size_t i = 0; i < parts.size(); ++i) {
-            if (i)
-                oss << ".";
-            oss << parts[i];
+std::string ModuleLoader::joinQualified(const std::vector<std::string>& parts) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < parts.size(); ++i) {
+        if (i)
+            oss << ".";
+        oss << parts[i];
+    }
+    return oss.str();
+}
+
+namespace {
+std::string joinQualifiedLocal(const std::vector<std::string>& parts) {
+    std::ostringstream oss;
+    for (size_t i = 0; i < parts.size(); ++i) {
+        if (i)
+            oss << ".";
+        oss << parts[i];
+    }
+    return oss.str();
+}
+
+std::string formatPackageName(const std::vector<std::string>& parts) {
+    if (parts.empty())
+        return "default package";
+    return joinQualifiedLocal(parts);
+}
+
+std::string formatImportName(const ImportDeclaration& imp) {
+    std::ostringstream oss;
+    if (!imp.packageParts.empty()) {
+        oss << joinQualifiedLocal(imp.packageParts);
+        if (imp.isWildcard) {
+            oss << ".*";
+            return oss.str();
+        }
+        if (imp.symbol) {
+            oss << "." << *imp.symbol;
+            return oss.str();
         }
         return oss.str();
     }
+    if (imp.isWildcard)
+        return "*";
+    if (imp.symbol)
+        return *imp.symbol;
+    return "";
+}
+}  // namespace
 
-    namespace {
-        std::string joinQualifiedLocal(const std::vector<std::string>& parts) {
-            std::ostringstream oss;
-            for (size_t i = 0; i < parts.size(); ++i) {
-                if (i)
-                    oss << ".";
-                oss << parts[i];
-            }
-            return oss.str();
-        }
+std::string ModuleLoader::canonicalize(const std::string& path) const {
+    std::error_code ec;
+    fs::path p(path);
+    fs::path abs = fs::absolute(p, ec);
+    if (!ec) {
+        fs::path canon = fs::weakly_canonical(abs, ec);
+        if (!ec)
+            return canon.string();
+    }
+    return p.lexically_normal().string();
+}
 
-        std::string formatPackageName(const std::vector<std::string>& parts) {
-            if (parts.empty())
-                return "default package";
-            return joinQualifiedLocal(parts);
-        }
+std::unique_ptr<Program> ModuleLoader::parseFile(const std::string& path) const {
+    std::ifstream in(path);
+    if (!in) {
+        throw BlochError(ErrorCategory::Parse, 0, 0, "failed to open '" + path + "'");
+    }
+    std::string src((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    Lexer lexer(src);
+    std::vector<Token> tokens = lexer.tokenize();
+    Parser parser(std::move(tokens));
+    return parser.parse();
+}
 
-        std::string formatImportName(const ImportDeclaration& imp) {
-            std::ostringstream oss;
-            if (!imp.packageParts.empty()) {
-                oss << joinQualifiedLocal(imp.packageParts);
-                if (imp.isWildcard) {
-                    oss << ".*";
-                    return oss.str();
-                }
-                if (imp.symbol) {
-                    oss << "." << *imp.symbol;
-                    return oss.str();
-                }
-                return oss.str();
-            }
-            if (imp.isWildcard)
-                return "*";
-            if (imp.symbol)
-                return *imp.symbol;
-            return "";
-        }
-    }  // namespace
+std::string ModuleLoader::resolveImportPath(const std::vector<std::string>& parts,
+                                            const std::string& fromDir) const {
+    fs::path relative;
+    for (const auto& p : parts)
+        relative /= p;
+    relative += ".bloch";
 
-    std::string ModuleLoader::canonicalize(const std::string& path) const {
+    bool preferSearchPaths = !parts.empty() && parts.front() == "bloch";
+
+    // Search order:
+    // - default: importing file dir, configured search paths, current working dir.
+    // - bloch.* imports: configured search paths first to avoid project shadowing stdlib.
+    std::vector<fs::path> bases;
+    if (preferSearchPaths) {
+        for (const auto& p : m_searchPaths)
+            bases.emplace_back(p);
+        bases.emplace_back(fromDir);
+        bases.push_back(fs::current_path());
+    } else {
+        bases.emplace_back(fromDir);
+        for (const auto& p : m_searchPaths)
+            bases.emplace_back(p);
+        bases.push_back(fs::current_path());
+    }
+
+    for (const auto& base : bases) {
         std::error_code ec;
-        fs::path p(path);
-        fs::path abs = fs::absolute(p, ec);
-        if (!ec) {
-            fs::path canon = fs::weakly_canonical(abs, ec);
-            if (!ec)
-                return canon.string();
-        }
-        return p.lexically_normal().string();
+        fs::path candidate = fs::weakly_canonical(base / relative, ec);
+        if (ec)
+            continue;
+        if (fs::exists(candidate, ec) && fs::is_regular_file(candidate, ec))
+            return candidate.string();
+    }
+    return "";
+}
+
+std::vector<std::string> ModuleLoader::resolvePackageModules(
+    const std::vector<std::string>& packageParts, const std::string& fromDir) const {
+    fs::path relative;
+    for (const auto& p : packageParts)
+        relative /= p;
+
+    bool preferSearchPaths = !packageParts.empty() && packageParts.front() == "bloch";
+
+    std::vector<fs::path> bases;
+    if (preferSearchPaths) {
+        for (const auto& p : m_searchPaths)
+            bases.emplace_back(p);
+        bases.emplace_back(fromDir);
+        bases.push_back(fs::current_path());
+    } else {
+        bases.emplace_back(fromDir);
+        for (const auto& p : m_searchPaths)
+            bases.emplace_back(p);
+        bases.push_back(fs::current_path());
     }
 
-    std::unique_ptr<Program> ModuleLoader::parseFile(const std::string& path) const {
-        std::ifstream in(path);
-        if (!in) {
-            throw BlochError(ErrorCategory::Parse, 0, 0, "failed to open '" + path + "'");
-        }
-        std::string src((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
-        Lexer lexer(src);
-        std::vector<Token> tokens = lexer.tokenize();
-        Parser parser(std::move(tokens));
-        return parser.parse();
-    }
+    for (const auto& base : bases) {
+        std::error_code ec;
+        fs::path candidate = fs::weakly_canonical(base / relative, ec);
+        if (ec)
+            continue;
+        if (!fs::exists(candidate, ec) || !fs::is_directory(candidate, ec))
+            continue;
 
-    std::string ModuleLoader::resolveImportPath(const std::vector<std::string>& parts,
-                                                const std::string& fromDir) const {
-        fs::path relative;
-        for (const auto& p : parts) relative /= p;
-        relative += ".bloch";
-
-        bool preferSearchPaths = !parts.empty() && parts.front() == "bloch";
-
-        // Search order:
-        // - default: importing file dir, configured search paths, current working dir.
-        // - bloch.* imports: configured search paths first to avoid project shadowing stdlib.
-        std::vector<fs::path> bases;
-        if (preferSearchPaths) {
-            for (const auto& p : m_searchPaths) bases.emplace_back(p);
-            bases.emplace_back(fromDir);
-            bases.push_back(fs::current_path());
-        } else {
-            bases.emplace_back(fromDir);
-            for (const auto& p : m_searchPaths) bases.emplace_back(p);
-            bases.push_back(fs::current_path());
-        }
-
-        for (const auto& base : bases) {
-            std::error_code ec;
-            fs::path candidate = fs::weakly_canonical(base / relative, ec);
+        std::vector<std::string> modules;
+        for (const auto& entry : fs::directory_iterator(candidate, ec)) {
             if (ec)
+                break;
+            if (!entry.is_regular_file(ec))
                 continue;
-            if (fs::exists(candidate, ec) && fs::is_regular_file(candidate, ec))
-                return candidate.string();
+            fs::path p = entry.path();
+            if (p.extension() == ".bloch")
+                modules.push_back(p.string());
         }
-        return "";
+        if (!modules.empty()) {
+            std::sort(modules.begin(), modules.end());
+            return modules;
+        }
     }
 
-    std::vector<std::string> ModuleLoader::resolvePackageModules(
-        const std::vector<std::string>& packageParts, const std::string& fromDir) const {
-        fs::path relative;
-        for (const auto& p : packageParts) relative /= p;
+    return {};
+}
 
-        bool preferSearchPaths = !packageParts.empty() && packageParts.front() == "bloch";
-
-        std::vector<fs::path> bases;
-        if (preferSearchPaths) {
-            for (const auto& p : m_searchPaths) bases.emplace_back(p);
-            bases.emplace_back(fromDir);
-            bases.push_back(fs::current_path());
-        } else {
-            bases.emplace_back(fromDir);
-            for (const auto& p : m_searchPaths) bases.emplace_back(p);
-            bases.push_back(fs::current_path());
-        }
-
-        for (const auto& base : bases) {
-            std::error_code ec;
-            fs::path candidate = fs::weakly_canonical(base / relative, ec);
-            if (ec)
-                continue;
-            if (!fs::exists(candidate, ec) || !fs::is_directory(candidate, ec))
-                continue;
-
-            std::vector<std::string> modules;
-            for (const auto& entry : fs::directory_iterator(candidate, ec)) {
-                if (ec)
-                    break;
-                if (!entry.is_regular_file(ec))
-                    continue;
-                fs::path p = entry.path();
-                if (p.extension() == ".bloch")
-                    modules.push_back(p.string());
-            }
-            if (!modules.empty()) {
-                std::sort(modules.begin(), modules.end());
-                return modules;
-            }
-        }
-
+std::vector<std::string> ModuleLoader::packagePartsFor(const std::string& canonicalPath) const {
+    auto it = m_cache.find(canonicalPath);
+    if (it == m_cache.end() || !it->second || !it->second->packageDecl)
         return {};
+    return it->second->packageDecl->nameParts;
+}
+
+void ModuleLoader::loadModule(const std::string& path) {
+    std::string canon = canonicalize(path);
+    auto cyc = std::find(m_stack.begin(), m_stack.end(), canon);
+    if (cyc != m_stack.end()) {
+        std::ostringstream oss;
+        oss << "import cycle detected: ";
+        for (auto it = cyc; it != m_stack.end(); ++it)
+            oss << *it << " -> ";
+        oss << canon;
+        throw BlochError(ErrorCategory::Semantic, 0, 0, oss.str());
     }
+    if (m_cache.count(canon))
+        return;
 
-    std::vector<std::string> ModuleLoader::packagePartsFor(const std::string& canonicalPath) const {
-        auto it = m_cache.find(canonicalPath);
-        if (it == m_cache.end() || !it->second || !it->second->packageDecl)
-            return {};
-        return it->second->packageDecl->nameParts;
-    }
+    m_stack.push_back(canon);
+    std::unique_ptr<Program> program = parseFile(canon);
 
-    void ModuleLoader::loadModule(const std::string& path) {
-        std::string canon = canonicalize(path);
-        auto cyc = std::find(m_stack.begin(), m_stack.end(), canon);
-        if (cyc != m_stack.end()) {
-            std::ostringstream oss;
-            oss << "import cycle detected: ";
-            for (auto it = cyc; it != m_stack.end(); ++it) oss << *it << " -> ";
-            oss << canon;
-            throw BlochError(ErrorCategory::Semantic, 0, 0, oss.str());
-        }
-        if (m_cache.count(canon))
-            return;
-
-        m_stack.push_back(canon);
-        std::unique_ptr<Program> program = parseFile(canon);
-
-        fs::path parent = fs::path(canon).parent_path();
-        for (auto& imp : program->imports) {
-            if (!imp)
-                continue;
-            if (imp->isWildcard) {
-                std::vector<std::string> targets =
-                    resolvePackageModules(imp->packageParts, parent.string());
-                if (targets.empty()) {
-                    throw BlochError(ErrorCategory::Semantic, imp->line, imp->column,
-                                     "import '" + formatImportName(*imp) + "' not found");
-                }
-                for (const auto& target : targets) {
-                    std::string canonTarget = canonicalize(target);
-                    if (canonTarget == canon)
-                        continue;
-                    loadModule(target);
-                    std::vector<std::string> actualPackage = packagePartsFor(canonTarget);
-                    if (actualPackage != imp->packageParts) {
-                        throw BlochError(ErrorCategory::Semantic, imp->line, imp->column,
-                                         "import '" + formatImportName(*imp) +
-                                             "' resolved to package '" +
-                                             formatPackageName(actualPackage) + "', expected '" +
-                                             formatPackageName(imp->packageParts) + "'");
-                    }
-                }
-            } else if (imp->symbol) {
-                std::vector<std::string> parts = imp->packageParts;
-                parts.push_back(*imp->symbol);
-                std::string target = resolveImportPath(parts, parent.string());
-                if (target.empty()) {
-                    throw BlochError(ErrorCategory::Semantic, imp->line, imp->column,
-                                     "import '" + formatImportName(*imp) + "' not found");
-                }
-                loadModule(target);
+    fs::path parent = fs::path(canon).parent_path();
+    for (auto& imp : program->imports) {
+        if (!imp)
+            continue;
+        if (imp->isWildcard) {
+            std::vector<std::string> targets =
+                resolvePackageModules(imp->packageParts, parent.string());
+            if (targets.empty()) {
+                throw BlochError(ErrorCategory::Semantic, imp->line, imp->column,
+                                 "import '" + formatImportName(*imp) + "' not found");
+            }
+            for (const auto& target : targets) {
                 std::string canonTarget = canonicalize(target);
+                if (canonTarget == canon)
+                    continue;
+                loadModule(target);
                 std::vector<std::string> actualPackage = packagePartsFor(canonTarget);
                 if (actualPackage != imp->packageParts) {
                     throw BlochError(ErrorCategory::Semantic, imp->line, imp->column,
@@ -250,71 +238,91 @@ namespace bloch::compiler {
                                          formatPackageName(actualPackage) + "', expected '" +
                                          formatPackageName(imp->packageParts) + "'");
                 }
-            } else {
-                throw BlochError(
-                    ErrorCategory::Semantic, imp->line, imp->column,
-                    "import '" + formatImportName(*imp) + "' is missing a symbol or wildcard");
             }
+        } else if (imp->symbol) {
+            std::vector<std::string> parts = imp->packageParts;
+            parts.push_back(*imp->symbol);
+            std::string target = resolveImportPath(parts, parent.string());
+            if (target.empty()) {
+                throw BlochError(ErrorCategory::Semantic, imp->line, imp->column,
+                                 "import '" + formatImportName(*imp) + "' not found");
+            }
+            loadModule(target);
+            std::string canonTarget = canonicalize(target);
+            std::vector<std::string> actualPackage = packagePartsFor(canonTarget);
+            if (actualPackage != imp->packageParts) {
+                throw BlochError(ErrorCategory::Semantic, imp->line, imp->column,
+                                 "import '" + formatImportName(*imp) + "' resolved to package '" +
+                                     formatPackageName(actualPackage) + "', expected '" +
+                                     formatPackageName(imp->packageParts) + "'");
+            }
+        } else {
+            throw BlochError(
+                ErrorCategory::Semantic, imp->line, imp->column,
+                "import '" + formatImportName(*imp) + "' is missing a symbol or wildcard");
         }
-
-        program->imports.clear();
-        m_cache[canon] = std::move(program);
-        m_loadOrder.push_back(canon);
-        m_stack.pop_back();
     }
 
-    std::unique_ptr<Program> ModuleLoader::load(const std::string& entryFile) {
-        m_cache.clear();
-        m_loadOrder.clear();
-        m_stack.clear();
+    program->imports.clear();
+    m_cache[canon] = std::move(program);
+    m_loadOrder.push_back(canon);
+    m_stack.pop_back();
+}
 
-        // Load implicit root Object first when available. This keeps class inheritance
-        // rooted even when user code omits an explicit import.
-        std::string entryCanonical = canonicalize(entryFile);
-        fs::path entryParent = fs::path(entryCanonical).parent_path();
-        std::string stdlibObject =
-            resolveImportPath({"bloch", "lang", "Object"}, entryParent.string());
-        if (!stdlibObject.empty()) {
-            loadModule(stdlibObject);
-        }
+std::unique_ptr<Program> ModuleLoader::load(const std::string& entryFile) {
+    m_cache.clear();
+    m_loadOrder.clear();
+    m_stack.clear();
 
-        loadModule(entryFile);
+    // Load implicit root Object first when available. This keeps class inheritance
+    // rooted even when user code omits an explicit import.
+    std::string entryCanonical = canonicalize(entryFile);
+    fs::path entryParent = fs::path(entryCanonical).parent_path();
+    std::string stdlibObject = resolveImportPath({"bloch", "lang", "Object"}, entryParent.string());
+    if (!stdlibObject.empty()) {
+        loadModule(stdlibObject);
+    }
 
-        std::unique_ptr<Program> merged = std::make_unique<Program>();
-        for (const auto& path : m_loadOrder) {
-            std::unique_ptr<Program>& mod = m_cache[path];
-            for (auto& cls : mod->classes) merged->classes.push_back(std::move(cls));
-            for (auto& fn : mod->functions) merged->functions.push_back(std::move(fn));
-            for (auto& stmt : mod->statements) merged->statements.push_back(std::move(stmt));
-        }
+    loadModule(entryFile);
 
-        size_t mainCount = 0;
-        for (std::unique_ptr<FunctionDeclaration>& fn : merged->functions) {
-            if (fn && fn->name == "main") {
-                ++mainCount;
-                if (fn->hasShotsAnnotation) {
-                    for (std::unique_ptr<AnnotationNode>& annotation : fn->annotations) {
-                        if (annotation && annotation->name == "shots") {
-                            int shotCount = std::stoi(annotation->value);
-                            merged->shots = {true, shotCount};
-                        }
+    std::unique_ptr<Program> merged = std::make_unique<Program>();
+    for (const auto& path : m_loadOrder) {
+        std::unique_ptr<Program>& mod = m_cache[path];
+        for (auto& cls : mod->classes)
+            merged->classes.push_back(std::move(cls));
+        for (auto& fn : mod->functions)
+            merged->functions.push_back(std::move(fn));
+        for (auto& stmt : mod->statements)
+            merged->statements.push_back(std::move(stmt));
+    }
+
+    size_t mainCount = 0;
+    for (std::unique_ptr<FunctionDeclaration>& fn : merged->functions) {
+        if (fn && fn->name == "main") {
+            ++mainCount;
+            if (fn->hasShotsAnnotation) {
+                for (std::unique_ptr<AnnotationNode>& annotation : fn->annotations) {
+                    if (annotation && annotation->name == "shots") {
+                        int shotCount = std::stoi(annotation->value);
+                        merged->shots = {true, shotCount};
                     }
-                } else {
-                    merged->shots = {false, 1};
                 }
+            } else {
+                merged->shots = {false, 1};
             }
         }
-
-        if (mainCount == 0) {
-            throw BlochError(ErrorCategory::Semantic, 0, 0,
-                             "No 'main' function found across imported modules");
-        }
-        if (mainCount > 1) {
-            throw BlochError(ErrorCategory::Semantic, 0, 0,
-                             "Multiple 'main' functions found across imported modules");
-        }
-
-        return merged;
     }
+
+    if (mainCount == 0) {
+        throw BlochError(ErrorCategory::Semantic, 0, 0,
+                         "No 'main' function found across imported modules");
+    }
+    if (mainCount > 1) {
+        throw BlochError(ErrorCategory::Semantic, 0, 0,
+                         "Multiple 'main' functions found across imported modules");
+    }
+
+    return merged;
+}
 
 }  // namespace bloch::compiler

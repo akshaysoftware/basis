@@ -17,13 +17,13 @@ If you hit a roadblock, start with the quick checks below and the [Common issues
 
 During multi-shot runs, echo defaults to off; pass `--echo=all` if you need output.
 
-If problems persist, reduce shots to simplify debugging, add `echo` statements to inspect state, and pay attention to line/column numbers in error messages. If you have found a bug please raise an issue on GitHub (https://github.com/bloch-labs/bloch) or email hello@bloch-labs.com.
+If problems persist, reduce shots to simplify debugging, add `echo` statements to inspect state, and pay attention to line/column numbers in error messages. If you have found a bug please raise an issue on GitHub (https://github.com/akshaysoftware/basis) or email akshay.anu@gmail.com.
 
 ## Common issues
 
 | Symptom | Cause | Fix |
 |--------|--------|-----|
-| "expected .bloch file" or wrong file run | No file passed or wrong path | Pass the path to your `.bloch` file as the last argument: `bloch path/to/file.bloch`. |
+| "expected .bloch file" or wrong file run | No file passed or wrong path | Pass the path to your `.bloch` file as the last argument: `basis path/to/file.bloch`. |
 | Import / module not found | Import path doesn’t resolve to a file | Ensure the imported module exists at the expected path, package declarations match the import path, and the loader can find it (importing-file directory, configured search paths, or working directory). |
 | Duplicate definition of main | More than one `main()` in the program | Keep exactly one `main()` across all files that are imported or run. |
 | Gate-after-measurement error | Gate applied to a qubit that was already measured | Call `reset q;` before applying more gates to `q`, or use a new qubit. See [Quantum Programming](./quantum-programming.md). |
@@ -36,4 +36,4 @@ If problems persist, reduce shots to simplify debugging, add `echo` statements t
 
 - **Documentation:** Revisit the guides linked from the [docs README](./README.md), especially [Errors & Diagnostics](./diagnostics.md) and the [Language Specification](./language-spec.md).
 - **Community and support:** See the main repository [README](../README.md) for the project website, community links, and contact (e.g. GitHub Discussions, email).
-- **Contributor / implementation details:** For deep dives into the compiler and runtime, see the contributor references in `engineering/reference/`.
+- **Contributor / implementation details:** For deep dives into the compiler and runtime, see the contributor references in [architecture guide](architecture.md).

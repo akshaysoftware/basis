@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,121 +22,119 @@
 #include "bloch/compiler/lexer/token.hpp"
 
 namespace bloch::compiler {
-    /**
-     * Parser consumes a flat token stream and produces an AST.
-     *
-     * Design notes (living doc):
-     * - Statements and declarations stay hand-written for clarity.
-     * - Expressions use a Pratt/precedence-table loop (see parser.cpp) to avoid
-     *   the N-level cascade of parse* methods and make adding operators table-driven.
-     * - Multi-declarations (e.g., `qubit a, b;`) are expanded via m_extraStatements.
-     * - Errors throw BlochError with 1-based line/column taken from tokens.
-     */
-    class Parser {
-       public:
-        explicit Parser(std::vector<Token> tokens);
-        [[nodiscard]] std::unique_ptr<Program> parse();
+/**
+ * Parser consumes a flat token stream and produces an AST.
+ *
+ * Design notes (living doc):
+ * - Statements and declarations stay hand-written for clarity.
+ * - Expressions use a Pratt/precedence-table loop (see parser.cpp) to avoid
+ *   the N-level cascade of parse* methods and make adding operators table-driven.
+ * - Multi-declarations (e.g., `qubit a, b;`) are expanded via m_extraStatements.
+ * - Errors throw BlochError with 1-based line/column taken from tokens.
+ */
+class Parser {
+   public:
+    explicit Parser(std::vector<Token> tokens);
+    [[nodiscard]] std::unique_ptr<Program> parse();
 
-       private:
-        std::vector<Token> m_tokens;
-        size_t m_current;
-        // For multi-declarations (e.g. qubit a, b, c;), we parse the first
-        // and stage the rest here, then flush them into the surrounding block.
-        std::vector<std::unique_ptr<Statement>> m_extraStatements;
+   private:
+    std::vector<Token> m_tokens;
+    size_t m_current;
+    // For multi-declarations (e.g. qubit a, b, c;), we parse the first
+    // and stage the rest here, then flush them into the surrounding block.
+    std::vector<std::unique_ptr<Statement>> m_extraStatements;
 
-        // Token manipulation
-        [[nodiscard]] const Token& peek() const;
-        [[nodiscard]] const Token& previous() const;
-        [[nodiscard]] const Token& advance();
-        [[nodiscard]] const Token& expect(TokenType type, const std::string& message);
+    // Token manipulation
+    [[nodiscard]] const Token& peek() const;
+    [[nodiscard]] const Token& previous() const;
+    [[nodiscard]] const Token& advance();
+    [[nodiscard]] const Token& expect(TokenType type, const std::string& message);
 
-        // Token matching
-        [[nodiscard]] bool match(TokenType type);
-        [[nodiscard]] bool check(TokenType type) const;
-        [[nodiscard]] bool checkNext(TokenType type) const;
-        [[nodiscard]] bool checkFunctionAnnotation() const;
-        [[nodiscard]] bool isTypeAhead() const;
-        [[nodiscard]] bool isAtEnd() const;
+    // Token matching
+    [[nodiscard]] bool match(TokenType type);
+    [[nodiscard]] bool check(TokenType type) const;
+    [[nodiscard]] bool checkNext(TokenType type) const;
+    [[nodiscard]] bool checkFunctionAnnotation() const;
+    [[nodiscard]] bool isTypeAhead() const;
+    [[nodiscard]] bool isAtEnd() const;
 
-        void reportError(const std::string& msg);
+    void reportError(const std::string& msg);
 
-        // Top level
-        [[nodiscard]] std::unique_ptr<PackageDeclaration> parsePackageDeclaration();
-        [[nodiscard]] std::unique_ptr<ImportDeclaration> parseImport();
-        [[nodiscard]] std::unique_ptr<ClassDeclaration> parseClassDeclaration();
-        [[nodiscard]] std::unique_ptr<FunctionDeclaration> parseFunction();
+    // Top level
+    [[nodiscard]] std::unique_ptr<PackageDeclaration> parsePackageDeclaration();
+    [[nodiscard]] std::unique_ptr<ImportDeclaration> parseImport();
+    [[nodiscard]] std::unique_ptr<ClassDeclaration> parseClassDeclaration();
+    [[nodiscard]] std::unique_ptr<FunctionDeclaration> parseFunction();
 
-        // Declarations
-        [[nodiscard]] std::unique_ptr<ClassMember> parseClassMember(const std::string& className,
-                                                                    bool isStaticClass);
-        [[nodiscard]] std::unique_ptr<FieldDeclaration> parseFieldDeclaration(
-            Visibility vis, bool isFinal, bool isStatic,
-            std::vector<std::unique_ptr<AnnotationNode>> annotations);
-        [[nodiscard]] std::unique_ptr<MethodDeclaration> parseMethodDeclaration(
-            Visibility vis, bool isStatic, bool isVirtual, bool isOverride,
-            std::vector<std::unique_ptr<AnnotationNode>> annotations);
-        [[nodiscard]] std::unique_ptr<ConstructorDeclaration> parseConstructorDeclaration(
-            Visibility vis, const std::string& className);
-        [[nodiscard]] std::unique_ptr<DestructorDeclaration> parseDestructorDeclaration(
-            Visibility vis);
-        [[nodiscard]] Visibility parseVisibility();
-        [[nodiscard]] std::vector<std::string> parseQualifiedName();
-        [[nodiscard]] std::unique_ptr<VariableDeclaration> parseVariableDeclaration(
-            bool isFinal, bool allowMultiple = true);
-        [[nodiscard]] std::unique_ptr<VariableDeclaration> parseVariableDeclaration(
-            std::unique_ptr<Type> preParsedType, bool isFinal, bool allowMultiple = true);
-        [[nodiscard]] std::unique_ptr<AnnotationNode> parseVariableAnnotation();
-        [[nodiscard]] std::unique_ptr<AnnotationNode> parseFunctionAnnotation();
-        [[nodiscard]] std::vector<std::unique_ptr<AnnotationNode>> parseAnnotations();
+    // Declarations
+    [[nodiscard]] std::unique_ptr<ClassMember> parseClassMember(const std::string& className,
+                                                                bool isStaticClass);
+    [[nodiscard]] std::unique_ptr<FieldDeclaration> parseFieldDeclaration(
+        Visibility vis, bool isFinal, bool isStatic,
+        std::vector<std::unique_ptr<AnnotationNode>> annotations);
+    [[nodiscard]] std::unique_ptr<MethodDeclaration> parseMethodDeclaration(
+        Visibility vis, bool isStatic, bool isVirtual, bool isOverride,
+        std::vector<std::unique_ptr<AnnotationNode>> annotations);
+    [[nodiscard]] std::unique_ptr<ConstructorDeclaration> parseConstructorDeclaration(
+        Visibility vis, const std::string& className);
+    [[nodiscard]] std::unique_ptr<DestructorDeclaration> parseDestructorDeclaration(Visibility vis);
+    [[nodiscard]] Visibility parseVisibility();
+    [[nodiscard]] std::vector<std::string> parseQualifiedName();
+    [[nodiscard]] std::unique_ptr<VariableDeclaration> parseVariableDeclaration(
+        bool isFinal, bool allowMultiple = true);
+    [[nodiscard]] std::unique_ptr<VariableDeclaration> parseVariableDeclaration(
+        std::unique_ptr<Type> preParsedType, bool isFinal, bool allowMultiple = true);
+    [[nodiscard]] std::unique_ptr<AnnotationNode> parseVariableAnnotation();
+    [[nodiscard]] std::unique_ptr<AnnotationNode> parseFunctionAnnotation();
+    [[nodiscard]] std::vector<std::unique_ptr<AnnotationNode>> parseAnnotations();
 
-        // Statements
-        [[nodiscard]] std::unique_ptr<Statement> parseStatement();
-        [[nodiscard]] std::unique_ptr<BlockStatement> parseBlock();
-        [[nodiscard]] std::unique_ptr<ReturnStatement> parseReturn();
-        [[nodiscard]] std::unique_ptr<IfStatement> parseIf();
-        [[nodiscard]] std::unique_ptr<ForStatement> parseFor();
-        [[nodiscard]] std::unique_ptr<WhileStatement> parseWhile();
-        [[nodiscard]] std::unique_ptr<EchoStatement> parseEcho();
-        [[nodiscard]] std::unique_ptr<ResetStatement> parseReset();
-        [[nodiscard]] std::unique_ptr<MeasureStatement> parseMeasure();
-        [[nodiscard]] std::unique_ptr<DestroyStatement> parseDestroy();
-        [[nodiscard]] std::unique_ptr<AssignmentStatement> parseAssignment();
-        [[nodiscard]] std::unique_ptr<ExpressionStatement> parseExpressionStatement();
+    // Statements
+    [[nodiscard]] std::unique_ptr<Statement> parseStatement();
+    [[nodiscard]] std::unique_ptr<BlockStatement> parseBlock();
+    [[nodiscard]] std::unique_ptr<ReturnStatement> parseReturn();
+    [[nodiscard]] std::unique_ptr<IfStatement> parseIf();
+    [[nodiscard]] std::unique_ptr<ForStatement> parseFor();
+    [[nodiscard]] std::unique_ptr<WhileStatement> parseWhile();
+    [[nodiscard]] std::unique_ptr<EchoStatement> parseEcho();
+    [[nodiscard]] std::unique_ptr<ResetStatement> parseReset();
+    [[nodiscard]] std::unique_ptr<MeasureStatement> parseMeasure();
+    [[nodiscard]] std::unique_ptr<DestroyStatement> parseDestroy();
+    [[nodiscard]] std::unique_ptr<AssignmentStatement> parseAssignment();
+    [[nodiscard]] std::unique_ptr<ExpressionStatement> parseExpressionStatement();
 
-        // Expressions
-        [[nodiscard]] std::unique_ptr<Expression> parseExpression();
-        [[nodiscard]] std::unique_ptr<Expression> parseAssignmentExpression();
-        /** Pratt-style expression parser using binding powers (see parser.cpp). */
-        [[nodiscard]] std::unique_ptr<Expression> parsePrattExpression(int minBp);
-        /** Parses prefix operators (unary) and primaries; postfix handled in Pratt loop. */
-        [[nodiscard]] std::unique_ptr<Expression> parsePrefixExpression();
-        /** Compatibility wrapper for cast operands; equivalent to prefix expression parse. */
-        [[nodiscard]] std::unique_ptr<Expression> parseUnary();
-        [[nodiscard]] std::unique_ptr<Expression> parsePrimary();
-        [[nodiscard]] std::unique_ptr<Expression> parseArrayLiteral();
+    // Expressions
+    [[nodiscard]] std::unique_ptr<Expression> parseExpression();
+    [[nodiscard]] std::unique_ptr<Expression> parseAssignmentExpression();
+    /** Pratt-style expression parser using binding powers (see parser.cpp). */
+    [[nodiscard]] std::unique_ptr<Expression> parsePrattExpression(int minBp);
+    /** Parses prefix operators (unary) and primaries; postfix handled in Pratt loop. */
+    [[nodiscard]] std::unique_ptr<Expression> parsePrefixExpression();
+    /** Compatibility wrapper for cast operands; equivalent to prefix expression parse. */
+    [[nodiscard]] std::unique_ptr<Expression> parseUnary();
+    [[nodiscard]] std::unique_ptr<Expression> parsePrimary();
+    [[nodiscard]] std::unique_ptr<Expression> parseArrayLiteral();
 
-        // Literals
-        [[nodiscard]] std::unique_ptr<Expression> parseLiteral();
+    // Literals
+    [[nodiscard]] std::unique_ptr<Expression> parseLiteral();
 
-        // Types
-        [[nodiscard]] std::unique_ptr<Type> parseType(bool allowEmptyTypeArguments = false);
-        [[nodiscard]] std::unique_ptr<Type> parsePrimitiveType();
-        [[nodiscard]] std::unique_ptr<Type> parseArrayType(
-            std::unique_ptr<Type> elementType, int size = -1,
-            std::unique_ptr<Expression> sizeExpr = nullptr);
-        [[nodiscard]] std::vector<std::unique_ptr<TypeParameter>> parseTypeParameters();
-        [[nodiscard]] std::vector<std::unique_ptr<Type>> parseTypeArgumentList(
-            bool allowEmpty = false);
+    // Types
+    [[nodiscard]] std::unique_ptr<Type> parseType(bool allowEmptyTypeArguments = false);
+    [[nodiscard]] std::unique_ptr<Type> parsePrimitiveType();
+    [[nodiscard]] std::unique_ptr<Type> parseArrayType(
+        std::unique_ptr<Type> elementType, int size = -1,
+        std::unique_ptr<Expression> sizeExpr = nullptr);
+    [[nodiscard]] std::vector<std::unique_ptr<TypeParameter>> parseTypeParameters();
+    [[nodiscard]] std::vector<std::unique_ptr<Type>> parseTypeArgumentList(bool allowEmpty = false);
 
-        // Parameters and Arguments
-        [[nodiscard]] std::vector<std::unique_ptr<Parameter>> parseParameterList();
-        [[nodiscard]] std::vector<std::unique_ptr<Expression>> parseArgumentList();
+    // Parameters and Arguments
+    [[nodiscard]] std::vector<std::unique_ptr<Parameter>> parseParameterList();
+    [[nodiscard]] std::vector<std::unique_ptr<Expression>> parseArgumentList();
 
-        // Helpers
-        [[nodiscard]] std::unique_ptr<Expression> cloneExpression(const Expression& expr);
-        [[nodiscard]] std::unique_ptr<Type> cloneType(const Type& type);
-        [[nodiscard]] std::vector<std::unique_ptr<AnnotationNode>> cloneAnnotations(
-            const std::vector<std::unique_ptr<AnnotationNode>>& annotations);
-        void flushExtraStatements(std::vector<std::unique_ptr<Statement>>& dest);
-    };
+    // Helpers
+    [[nodiscard]] std::unique_ptr<Expression> cloneExpression(const Expression& expr);
+    [[nodiscard]] std::unique_ptr<Type> cloneType(const Type& type);
+    [[nodiscard]] std::vector<std::unique_ptr<AnnotationNode>> cloneAnnotations(
+        const std::vector<std::unique_ptr<AnnotationNode>>& annotations);
+    void flushExtraStatements(std::vector<std::unique_ptr<Statement>>& dest);
+};
 }  // namespace bloch::compiler

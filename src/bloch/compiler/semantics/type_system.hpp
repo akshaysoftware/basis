@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,49 +21,37 @@
 
 namespace bloch::compiler {
 
-    // A compact type universe for semantic checks and runtime hints.
-    enum class ValueType {
-        Int,
-        Long,
-        Float,
-        String,
-        Char,
-        Qubit,
-        Bit,
-        Boolean,
-        Null,
-        Void,
-        Unknown
-    };
+// A compact type universe for semantic checks and runtime hints.
+enum class ValueType { Int, Long, Float, String, Char, Qubit, Bit, Boolean, Null, Void, Unknown };
 
-    ValueType typeFromString(const std::string& name);
-    std::string typeToString(ValueType type);
+ValueType typeFromString(const std::string& name);
+std::string typeToString(ValueType type);
 
-    // Per-name metadata tracked across nested scopes.
-    struct SymbolInfo {
-        bool isFinal = false;
-        ValueType type = ValueType::Unknown;
-        std::optional<int> constInt;
-        std::string className;    // Non-empty for user-defined classes
-        bool isTypeName = false;  // True when the symbol represents a type (e.g. class name)
-    };
+// Per-name metadata tracked across nested scopes.
+struct SymbolInfo {
+    bool isFinal = false;
+    ValueType type = ValueType::Unknown;
+    std::optional<int> constInt;
+    std::string className;    // Non-empty for user-defined classes
+    bool isTypeName = false;  // True when the symbol represents a type (e.g. class name)
+};
 
-    // Nested-scope symbol table (stack of hash maps).
-    class SymbolTable {
-       public:
-        void beginScope();
-        void endScope();
-        void declare(const std::string& name, bool isFinal, ValueType type,
-                     const std::string& className = "", bool isTypeName = false);
-        bool isDeclared(const std::string& name) const;
-        bool isFinal(const std::string& name) const;
-        ValueType getType(const std::string& name) const;
-        std::string getClassName(const std::string& name) const;
-        bool isTypeName(const std::string& name) const;
-        std::optional<int> getConstInt(const std::string& name) const;
-        void setConstInt(const std::string& name, int value);
+// Nested-scope symbol table (stack of hash maps).
+class SymbolTable {
+   public:
+    void beginScope();
+    void endScope();
+    void declare(const std::string& name, bool isFinal, ValueType type,
+                 const std::string& className = "", bool isTypeName = false);
+    bool isDeclared(const std::string& name) const;
+    bool isFinal(const std::string& name) const;
+    ValueType getType(const std::string& name) const;
+    std::string getClassName(const std::string& name) const;
+    bool isTypeName(const std::string& name) const;
+    std::optional<int> getConstInt(const std::string& name) const;
+    void setConstInt(const std::string& name, int value);
 
-       private:
-        std::vector<std::unordered_map<std::string, SymbolInfo>> m_scopes;
-    };
+   private:
+    std::vector<std::unordered_map<std::string, SymbolInfo>> m_scopes;
+};
 }  // namespace bloch::compiler

@@ -1,6 +1,6 @@
 # Classes and Objects
 
-Bloch v1.1.0 includes a class system with single inheritance, visibility, virtual dispatch,
+Basis v1.1.0 includes a class system with single inheritance, visibility, virtual dispatch,
 and generics.
 
 Every non-static class implicitly extends `Object`. When the stdlib is installed, that root

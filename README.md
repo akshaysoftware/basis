@@ -1,54 +1,86 @@
-> [!IMPORTANT]
-> **This repository contains the archived original implementation of the Bloch programming language and is no longer under active development.**
->
-> The original `v1.0.x` release line is preserved here as part of Bloch's development and research history. Bloch `v1.0.3` is the software release associated with the 2026 Journal of Open Source Software publication and is permanently archived as Zenodo DOI `10.5281/zenodo.18407424`.
->
-> Active development of Bloch restarted in August 2026 in [`bloch-labs/bloch-lang`](https://github.com/bloch-labs/bloch-lang), using a pre-1.0 versioning policy while the language architecture, package model and compiler interfaces are stabilised.
->
-> JOSS paper DOI: `10.21105/joss.09625`
->
-> ---
+# Basis
 
-# Bloch
+[![CI](https://github.com/akshaysoftware/basis/actions/workflows/ci.yml/badge.svg)](https://github.com/akshaysoftware/basis/actions/workflows/ci.yml)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
 
-Bloch is an open-source, strongly typed, hybrid quantum programming language. It’s designed for people who want classical and quantum code side by side. The toolchain is hardware-agnostic so you can move between simulators and future backends.
+Basis is an open-source, typed language for hybrid classical and quantum programs,
+implemented in C++20 and maintained by [Akshay Pal](https://github.com/akshaysoftware).
 
-## 🚀 Install 
-- Linux/macOS:
-```
-curl -fsSL https://raw.githubusercontent.com/bloch-labs/bloch/HEAD/scripts/install.sh | bash -s -- latest
-```
-Swap `latest` for a specific tag (eg `v1.1.0`). The script downloads the matching archive for your platform, verifies its checksum, installs the `bloch` binary into a writable directory, installs the bundled stdlib to your user data directory (for immediate `bloch.lang` usage), and updates your shell profile if needed. Add `INSTALL_DIR=/custom/path` before `bash` to override the binary destination.
+The project is developing towards version 2.0. Language and compiler interfaces may
+change. The current toolchain retains the `.bloch` source extension and `bloch.lang`
+standard-library namespace from its predecessor.
 
-#### Windows
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -Command "iwr https://raw.githubusercontent.com/bloch-labs/bloch/HEAD/scripts/install.ps1 -UseBasicParsing -OutFile $env:TEMP\\bloch-install.ps1; & $env:TEMP\\bloch-install.ps1 -Version latest"
+## Build and run
+
+Requirements: a C++20 compiler, CMake 3.28+, Ninja and Bash. Contributor commands also
+use [just](https://just.systems) and clang-format 18.
+
+```bash
+git clone https://github.com/akshaysoftware/basis.git
+cd basis
+just build
+just run examples/02_bell_state.bloch --shots=1000
+just test
 ```
 
-Swap `-Version latest` for any tag you want. The script downloads the Windows ZIP, verifies its checksum, installs `bloch.exe` into `%LOCALAPPDATA%\Programs\Bloch` by default, installs stdlib files to `%LOCALAPPDATA%\Bloch\library`, and adds the binary directory to your user `PATH` (opens in new shells).
-You can self-update later with `bloch --update`; major version jumps prompt for confirmation and show the changelog link.
+A small program looks like this:
 
-- From source: See `CONTRIBUTING.md`
+```text
+function main() -> void {
+    @tracked qubit[2] q;
+    h(q[0]);
+    cx(q[0], q[1]);
+    measure q;
+}
+```
 
-## 💻 VS Code Extension 
-Syntax highlighting: https://github.com/bloch-labs/bloch-vscode
+## Install from source
 
-## 📚 Documentation 
-- User docs: `docs/README.md`
-- Contributor docs: `engineering/reference/README.md`
+From a checkout on macOS or Linux:
 
-## 📝 Cite 
-Use `CITATION.cff` (GitHub’s “Cite this repository” button) for BibTeX/metadata.
+```bash
+bash scripts/install.sh
+export PATH="$HOME/.local/bin:$PATH"
+basis --version
+```
 
-## 🤝 Contributing 
-Thanks for your interest in contributing! Check the issues tab and read `CONTRIBUTING.md` plus the contributor docs before raising a PR.
+The installer builds and tests the current checkout, then installs the executable
+and bundled standard library under `~/.local`. Pass an absolute prefix to change it:
 
-## 🌐 Community
-You can follow along our journey via the following community links:
-- Website: https://bloch-labs.com
-- Substack: https://blochlabs.substack.com/subscribe
-- X/Twitter: https://x.com/blochlabs
-- Email: hello@bloch-labs.com
+```bash
+bash scripts/install.sh /absolute/install/prefix
+```
 
-## 📄 Licence 
-Apache 2.0 (see `LICENSE`).
+## Documentation and contributions
+
+- [Documentation](docs/README.md)
+- [Contributing](CONTRIBUTING.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
+- [Security reports](SECURITY.md)
+- [Issues](https://github.com/akshaysoftware/basis/issues)
+
+Run `just` to list development commands and `just check` before opening a PR.
+Development uses short-lived feature branches and squash merges into `main`.
+
+## Current limitations
+
+The simulator's reset behaviour on entangled states requires correction. OpenQASM
+2 output is an execution trace and does not preserve general measurement-dependent
+control flow. Sampling does not yet expose a seed option. Treat these as development
+limitations when evaluating results. See [known issues](docs/known-issues.md).
+
+## History and citation
+
+Basis continues the Bloch programming-language project in its original repository.
+Bloch v1.0.3 accompanies the 2026 JOSS paper:
+
+Pal, A. (2026). *Bloch: a strongly typed, hardware-agnostic, hybrid quantum
+programming language*. Journal of Open Source Software, 11(117), 9625.
+[Paper](https://doi.org/10.21105/joss.09625) ·
+[Archived software](https://doi.org/10.5281/zenodo.18407424).
+
+The paper describes the historical release. See [CITATION.cff](CITATION.cff).
+
+## License
+
+[Apache License 2.0](LICENSE).

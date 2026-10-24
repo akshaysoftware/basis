@@ -1,41 +1,15 @@
-# CMake build folders
-/build
-/build-debug
-/build-release
-/CMakeFiles
-/CMakeCache.txt
-Makefile
-cmake_install.cmake
-
-# VSCode
-.vscode/
-
-# Binaries
-*.exe
-*.out
-*.app
-*.dll
-*.so
-*.dylib
-
-# Object files
+/build/
+/dist/
+/CMakeUserPresets.json
+/compile_commands.json
+/.cache/
+/.vscode/
+/.idea/
+.DS_Store
 *.o
 *.obj
-
-# Clangd index
-.cache/
-
-# Generated files
-compile_commands.json
-dist/
-
-# Packages (optional local builds)
-*.deb
-*.rpm
-
-# Examples folder
-examples/*.qasm
-
-# JOSS
-paper/jats/
-paper/paper.pdf
+*.exe
+*.out
+*.qasm
+/paper/paper.pdf
+/paper/jats/

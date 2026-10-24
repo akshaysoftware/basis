@@ -1,6 +1,6 @@
-# Bloch Language Specification
+# Basis Language Specification
 
-This document defines the Bloch language as implemented on this branch. Released versions are
+This document defines the Basis language as implemented on this branch. Released versions are
 tracked in `CHANGELOG.md`. It is the normative reference; the other guides in this folder are
 explanatory.
 
@@ -130,7 +130,7 @@ Key rules:
 - `destroy expr;` requires a class reference or `null`.
 
 ## Expressions and operators
-Bloch uses C-style precedence and left-to-right evaluation for most operators. Highlights:
+Basis uses C-style precedence and left-to-right evaluation for most operators. Highlights:
 
 - Arithmetic: `+ - * /` on numeric types (`int`, `long`, `float`). `%` is integer-only (`int` or
   `long`). `/` always returns `float`.
@@ -189,5 +189,5 @@ For a single reference with descriptions, see [Built-ins and Quantum Gates](./bu
   explicitly request `--echo=all`.
 
 ## Errors
-Bloch reports lexical, parse, semantic, and runtime errors with 1-based line and column numbers.
+Basis reports lexical, parse, semantic, and runtime errors with 1-based line and column numbers.
 Runtime errors include invalid casts, division by zero, illegal member access, and qubit misuse.

@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,44 +14,47 @@
 
 #pragma once
 
-#include <string>
+#include <cstddef>
 #include <string_view>
 #include <vector>
+
 #include "bloch/compiler/lexer/token.hpp"
-#include "bloch/support/error/bloch_error.hpp"
 
 namespace bloch::compiler {
-    // The Lexer turns raw source into a flat stream of tokens.
-    // It is intentionally simple: single-pass, no backtracking, and
-    // only enough lookahead for two-character operators and // comments.
-    class Lexer {
-       public:
-        explicit Lexer(const std::string_view source) noexcept;
-        [[nodiscard]] std::vector<Token> tokenize();
 
-       private:
-        std::string_view m_source;
-        size_t m_position;
-        int m_line;
-        int m_column;
+// Converts source text into a flat token stream in a single pass. The source must outlive the
+// lexer because it is retained as a non-owning view.
+class Lexer {
+   public:
+    explicit Lexer(std::string_view source) noexcept;
 
-        // Character helpers
-        [[nodiscard]] char peek() const noexcept;
-        [[nodiscard]] char peekNext() const noexcept;
-        [[nodiscard]] char advance() noexcept;
-        [[nodiscard]] bool match(char expected) noexcept;
+    [[nodiscard]] std::vector<Token> tokenize();
 
-        // Trivia and errors
-        void skipWhitespace();
-        void skipComment();
-        [[noreturn]] void reportError(const std::string& msg);
+   private:
+    std::string_view source_;
+    std::size_t position_ = 0;
+    std::size_t token_start_ = 0;
+    int line_ = 1;
+    int column_ = 1;
+    int token_line_ = 1;
+    int token_column_ = 1;
 
-        // Token producers
-        [[nodiscard]] Token makeToken(TokenType type, const std::string& value);
-        [[nodiscard]] Token scanToken();
-        [[nodiscard]] Token scanNumber();
-        [[nodiscard]] Token scanIdentifierOrKeyword();
-        [[nodiscard]] Token scanString();
-        [[nodiscard]] Token scanChar();
-    };
+    [[nodiscard]] bool is_at_end() const noexcept;
+    [[nodiscard]] char peek() const noexcept;
+    [[nodiscard]] char peek_next() const noexcept;
+    char advance() noexcept;
+    [[nodiscard]] bool match(char expected) noexcept;
+
+    void skip_whitespace() noexcept;
+    void skip_comment() noexcept;
+    [[noreturn]] void report_error(std::string_view message) const;
+
+    [[nodiscard]] Token make_token(TokenType type) const;
+    [[nodiscard]] Token scan_token();
+    [[nodiscard]] Token scan_number();
+    [[nodiscard]] Token scan_identifier_or_keyword();
+    [[nodiscard]] Token scan_string();
+    [[nodiscard]] Token scan_char();
+};
+
 }  // namespace bloch::compiler

@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,118 +17,118 @@
 #include <string>
 
 namespace bloch::compiler {
-    // Tokens represent the smallest meaningful pieces the parser understands.
-    // We group them loosely by purpose to keep scanning and parsing readable.
-    enum class TokenType {
-        // Literals
-        Identifier,
-        IntegerLiteral,
-        FloatLiteral,
-        LongLiteral,
-        BitLiteral,
-        StringLiteral,
-        CharLiteral,
+// Tokens represent the smallest meaningful pieces the parser understands.
+// We group them loosely by purpose to keep scanning and parsing readable.
+enum class TokenType {
+    // Literals
+    Identifier,
+    IntegerLiteral,
+    FloatLiteral,
+    LongLiteral,
+    BitLiteral,
+    StringLiteral,
+    CharLiteral,
 
-        // Boolean literals
-        True,
-        False,
+    // Boolean literals
+    True,
+    False,
 
-        // Keywords
-        Null,
-        Int,
-        Long,
-        Float,
-        String,
-        Char,
-        Qubit,
-        Bit,
-        Boolean,
-        Void,
-        Function,
-        Return,
-        If,
-        Else,
-        For,
-        While,
-        Measure,
-        Final,
-        Reset,
-        Default,
+    // Keywords
+    Null,
+    Int,
+    Long,
+    Float,
+    String,
+    Char,
+    Qubit,
+    Bit,
+    Boolean,
+    Void,
+    Function,
+    Return,
+    If,
+    Else,
+    For,
+    While,
+    Measure,
+    Final,
+    Reset,
+    Default,
 
-        // Annotations
-        At,
-        Quantum,
-        Tracked,
-        Shots,
+    // Annotations
+    At,
+    Quantum,
+    Tracked,
+    Shots,
 
-        // Class System
-        Class,
-        Public,
-        Private,
-        Protected,
-        Static,
-        Extends,
-        Abstract,
-        Virtual,
-        Override,
-        Super,
-        This,
-        Import,
-        Package,
-        New,
-        Constructor,
-        Destructor,
-        Destroy,
+    // Class System
+    Class,
+    Public,
+    Private,
+    Protected,
+    Static,
+    Extends,
+    Abstract,
+    Virtual,
+    Override,
+    Super,
+    This,
+    Import,
+    Package,
+    New,
+    Constructor,
+    Destructor,
+    Destroy,
 
-        // Operators and Punctuation
-        Equals,
-        Plus,
-        PlusPlus,
-        Minus,
-        MinusMinus,
-        Star,
-        Slash,
-        Percent,
-        Greater,
-        GreaterEqual,
-        Less,
-        LessEqual,
-        EqualEqual,
-        Bang,
-        BangEqual,
-        Ampersand,
-        AmpersandAmpersand,
-        Pipe,
-        PipePipe,
-        Caret,
-        Tilde,
-        Question,
-        Colon,
-        Dot,
-        Semicolon,
-        Comma,
-        Arrow,
-        LParen,
-        RParen,
-        LBrace,
-        RBrace,
-        LBracket,
-        RBracket,
+    // Operators and Punctuation
+    Equals,
+    Plus,
+    PlusPlus,
+    Minus,
+    MinusMinus,
+    Star,
+    Slash,
+    Percent,
+    Greater,
+    GreaterEqual,
+    Less,
+    LessEqual,
+    EqualEqual,
+    Bang,
+    BangEqual,
+    Ampersand,
+    AmpersandAmpersand,
+    Pipe,
+    PipePipe,
+    Caret,
+    Tilde,
+    Question,
+    Colon,
+    Dot,
+    Semicolon,
+    Comma,
+    Arrow,
+    LParen,
+    RParen,
+    LBrace,
+    RBrace,
+    LBracket,
+    RBracket,
 
-        // Built-ins
-        Echo,
+    // Built-ins
+    Echo,
 
-        // Control
-        Eof,
-        Unknown
-    };
+    // Control
+    Eof,
+    Unknown
+};
 
-    // A token carries what it is, the raw text we saw, and where it came from.
-    // Line/column are 1-based and point to the start of the token for friendly errors.
-    struct Token {
-        TokenType type;
-        std::string value;
-        int line;
-        int column;
-    };
+// A token carries what it is, the raw text we saw, and where it came from.
+// Line/column are 1-based and point to the start of the token for friendly errors.
+struct Token {
+    TokenType type;
+    std::string value;
+    int line;
+    int column;
+};
 }  // namespace bloch::compiler

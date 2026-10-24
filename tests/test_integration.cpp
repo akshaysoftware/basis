@@ -1,4 +1,4 @@
-// Copyright 2025-2026 Akshay Pal (https://bloch-labs.com)
+// Copyright 2025-2026 Akshay Pal (https://github.com/akshaysoftware)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,162 +35,160 @@ TEST(IntegrationTest, SkippedOnWindows) { EXPECT_TRUE(true); }
 #include "test_framework.hpp"
 
 namespace {
-    // Determine directory of the currently running test executable
-    std::filesystem::path executableDir() {
+// Determine directory of the currently running test executable
+std::filesystem::path executableDir() {
 #if defined(_WIN32)
-        char buf[MAX_PATH];
-        DWORD len = GetModuleFileNameA(nullptr, buf, MAX_PATH);
-        if (len > 0) {
-            std::filesystem::path p(buf);
-            return p.parent_path();
-        }
-        return std::filesystem::current_path();
+    char buf[MAX_PATH];
+    DWORD len = GetModuleFileNameA(nullptr, buf, MAX_PATH);
+    if (len > 0) {
+        std::filesystem::path p(buf);
+        return p.parent_path();
+    }
+    return std::filesystem::current_path();
 #elif defined(__APPLE__)
-        uint32_t size = 0;
-        _NSGetExecutablePath(nullptr, &size);
-        std::string path;
-        path.resize(size + 1);
-        if (_NSGetExecutablePath(path.data(), &size) == 0) {
-            std::filesystem::path p(path.c_str());
-            return p.parent_path();
-        }
-        return std::filesystem::current_path();
+    uint32_t size = 0;
+    _NSGetExecutablePath(nullptr, &size);
+    std::string path;
+    path.resize(size + 1);
+    if (_NSGetExecutablePath(path.data(), &size) == 0) {
+        std::filesystem::path p(path.c_str());
+        return p.parent_path();
+    }
+    return std::filesystem::current_path();
 #else
-        char buf[4096];
-        ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
-        if (len > 0) {
-            buf[len] = '\0';
-            std::filesystem::path p(buf);
-            return p.parent_path();
-        }
-        return std::filesystem::current_path();
+    char buf[4096];
+    ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+    if (len > 0) {
+        buf[len] = '\0';
+        std::filesystem::path p(buf);
+        return p.parent_path();
+    }
+    return std::filesystem::current_path();
 #endif
-    }
-
-    std::filesystem::path findBlochBinary() {
-        namespace fs = std::filesystem;
-        fs::path base = executableDir();
-#if defined(_WIN32)
-        const char* exe = "bloch.exe";
-#else
-        const char* exe = "bloch";
-#endif
-        std::vector<fs::path> candidates = {
-            base / exe,
-            base.parent_path() / exe,
-            base / ".." / exe,
-            fs::current_path() / "bin" / exe,
-            fs::current_path() / "bin" / "Release" / exe,
-            fs::current_path().parent_path() / "bin" / exe,
-            fs::current_path().parent_path() / "bin" / "Release" / exe,
-        };
-        for (auto& p : candidates) {
-            std::error_code ec;
-            if (fs::exists(p, ec))
-                return fs::weakly_canonical(p, ec);
-        }
-        return exe;
-    }
-
-    std::string normalizeOutput(std::string result) {
-        // Newlines
-        {
-            std::string tmp;
-            tmp.reserve(result.size());
-            for (size_t i = 0; i < result.size(); ++i) {
-                char c = result[i];
-                if (c == '\r') {
-                    // Skip CR; if next is LF, LF will be handled naturally
-                    continue;
-                }
-                tmp.push_back(c);
-            }
-            result.swap(tmp);
-        }
-        // ANSI escape sequences: \x1B[ ... letter
-        {
-            std::string tmp;
-            tmp.reserve(result.size());
-            for (size_t i = 0; i < result.size();) {
-                unsigned char c = static_cast<unsigned char>(result[i]);
-                if (c == 0x1B && i + 1 < result.size() && result[i + 1] == '[') {
-                    // Skip until a letter (m, K, etc.) or end
-                    i += 2;
-                    while (i < result.size()) {
-                        char ch = result[i++];
-                        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
-                            break;
-                    }
-                } else {
-                    tmp.push_back(static_cast<char>(c));
-                    ++i;
-                }
-            }
-            result.swap(tmp);
-        }
-        return result;
-    }
-
-    std::string runBloch(const std::string& source, const std::string& name,
-                         const std::string& options = "") {
-        namespace fs = std::filesystem;
-        fs::path cwd = fs::current_path();
-        fs::path blochFile = cwd / name;
-        std::ofstream ofs(blochFile);
-        ofs << source;
-        ofs.close();
-
-        fs::path blochBin = findBlochBinary();
-
-        std::string cmd = std::string("\"") + blochBin.string() + "\"";
-        if (!options.empty())
-            cmd += " " + options;
-        cmd += std::string(" \"") + fs::absolute(blochFile).string() + "\" 2>&1";
-        std::string result;
-        // Redirect stdout/stderr to a file and read it back (more portable than popen on Windows)
-        fs::path stem = blochFile.stem();
-        fs::path outPath = cwd / (stem.string() + ".out");
-        std::string redirCmd = cmd + std::string(" > \"") + outPath.string() + "\" 2>&1";
-        [[maybe_unused]] int rc = std::system(redirCmd.c_str());
-        {
-            std::ifstream in(outPath);
-            if (in) {
-                result.assign((std::istreambuf_iterator<char>(in)),
-                              std::istreambuf_iterator<char>());
-                in.close();
-            }
-        }
-
-        result = normalizeOutput(std::move(result));
-
-        fs::remove(blochFile);
-        fs::remove(cwd / (stem.string() + ".qasm"));
-        fs::remove(cwd / (stem.string() + ".out"));
-        return result;
-    }
-
-    std::string runBlochCommand(const std::string& options) {
-        namespace fs = std::filesystem;
-        fs::path cwd = fs::current_path();
-        fs::path blochBin = findBlochBinary();
-        fs::path outPath = cwd / "bloch_cli.out";
-        std::string cmd = std::string("\"") + blochBin.string() + "\"";
-        if (!options.empty())
-            cmd += " " + options;
-        cmd += std::string(" > \"") + outPath.string() + "\" 2>&1";
-        [[maybe_unused]] int rc = std::system(cmd.c_str());
-        std::string result;
-        {
-            std::ifstream in(outPath);
-            if (in) {
-                result.assign((std::istreambuf_iterator<char>(in)),
-                              std::istreambuf_iterator<char>());
-            }
-        }
-        fs::remove(outPath);
-        return normalizeOutput(std::move(result));
-    }
 }
+
+std::filesystem::path findBlochBinary() {
+    namespace fs = std::filesystem;
+    fs::path base = executableDir();
+#if defined(_WIN32)
+    const char* exe = "basis.exe";
+#else
+    const char* exe = "basis";
+#endif
+    std::vector<fs::path> candidates = {
+        base / exe,
+        base.parent_path() / exe,
+        base / ".." / exe,
+        fs::current_path() / "bin" / exe,
+        fs::current_path() / "bin" / "Release" / exe,
+        fs::current_path().parent_path() / "bin" / exe,
+        fs::current_path().parent_path() / "bin" / "Release" / exe,
+    };
+    for (auto& p : candidates) {
+        std::error_code ec;
+        if (fs::exists(p, ec))
+            return fs::weakly_canonical(p, ec);
+    }
+    return exe;
+}
+
+std::string normalizeOutput(std::string result) {
+    // Newlines
+    {
+        std::string tmp;
+        tmp.reserve(result.size());
+        for (size_t i = 0; i < result.size(); ++i) {
+            char c = result[i];
+            if (c == '\r') {
+                // Skip CR; if next is LF, LF will be handled naturally
+                continue;
+            }
+            tmp.push_back(c);
+        }
+        result.swap(tmp);
+    }
+    // ANSI escape sequences: \x1B[ ... letter
+    {
+        std::string tmp;
+        tmp.reserve(result.size());
+        for (size_t i = 0; i < result.size();) {
+            unsigned char c = static_cast<unsigned char>(result[i]);
+            if (c == 0x1B && i + 1 < result.size() && result[i + 1] == '[') {
+                // Skip until a letter (m, K, etc.) or end
+                i += 2;
+                while (i < result.size()) {
+                    char ch = result[i++];
+                    if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z'))
+                        break;
+                }
+            } else {
+                tmp.push_back(static_cast<char>(c));
+                ++i;
+            }
+        }
+        result.swap(tmp);
+    }
+    return result;
+}
+
+std::string runBloch(const std::string& source, const std::string& name,
+                     const std::string& options = "") {
+    namespace fs = std::filesystem;
+    fs::path cwd = fs::current_path();
+    fs::path blochFile = cwd / name;
+    std::ofstream ofs(blochFile);
+    ofs << source;
+    ofs.close();
+
+    fs::path blochBin = findBlochBinary();
+
+    std::string cmd = std::string("\"") + blochBin.string() + "\"";
+    if (!options.empty())
+        cmd += " " + options;
+    cmd += std::string(" \"") + fs::absolute(blochFile).string() + "\" 2>&1";
+    std::string result;
+    // Redirect stdout/stderr to a file and read it back (more portable than popen on Windows)
+    fs::path stem = blochFile.stem();
+    fs::path outPath = cwd / (stem.string() + ".out");
+    std::string redirCmd = cmd + std::string(" > \"") + outPath.string() + "\" 2>&1";
+    [[maybe_unused]] int rc = std::system(redirCmd.c_str());
+    {
+        std::ifstream in(outPath);
+        if (in) {
+            result.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+            in.close();
+        }
+    }
+
+    result = normalizeOutput(std::move(result));
+
+    fs::remove(blochFile);
+    fs::remove(cwd / (stem.string() + ".qasm"));
+    fs::remove(cwd / (stem.string() + ".out"));
+    return result;
+}
+
+std::string runBlochCommand(const std::string& options) {
+    namespace fs = std::filesystem;
+    fs::path cwd = fs::current_path();
+    fs::path blochBin = findBlochBinary();
+    fs::path outPath = cwd / "bloch_cli.out";
+    std::string cmd = std::string("\"") + blochBin.string() + "\"";
+    if (!options.empty())
+        cmd += " " + options;
+    cmd += std::string(" > \"") + outPath.string() + "\" 2>&1";
+    [[maybe_unused]] int rc = std::system(cmd.c_str());
+    std::string result;
+    {
+        std::ifstream in(outPath);
+        if (in) {
+            result.assign((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+        }
+    }
+    fs::remove(outPath);
+    return normalizeOutput(std::move(result));
+}
+}  // namespace
 
 TEST(IntegrationTest, RunsQuantumProgram) {
     std::string src = R"(
@@ -212,7 +210,6 @@ TEST(IntegrationTest, HelpListsAllCliOptions) {
     EXPECT_NE(output.find("--emit-qasm"), std::string::npos);
     EXPECT_NE(output.find("--shots"), std::string::npos);
     EXPECT_NE(output.find("--echo=auto|all|none"), std::string::npos);
-    EXPECT_NE(output.find("--update"), std::string::npos);
 }
 
 #endif  // BLOCH_SKIP_INTEGRATION_TESTS
@@ -317,7 +314,7 @@ function main() -> void {
     EXPECT_EQ(output.find("The '--shots=N' flag will be deprecated"), std::string::npos);
 }
 
-TEST(IntegrationTest, ShotsFlagStillWorksAndWarns) {
+TEST(IntegrationTest, ShotsFlagStillWorks) {
     std::string src = R"(
 function main() -> void {
     @tracked qubit q;
@@ -326,7 +323,6 @@ function main() -> void {
 )";
     std::string output = runBloch(src, "shots_flag.bloch", "--shots=4");
     EXPECT_NE(output.find("Shots: 4"), std::string::npos);
-    EXPECT_NE(output.find("The '--shots=N' flag will be deprecated"), std::string::npos);
 }
 
 TEST(IntegrationTest, ShotsAnnotationOverridesFlagAndWarns) {

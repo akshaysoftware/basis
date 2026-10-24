@@ -38,13 +38,13 @@ function main() -> void {
 **Run (installed):**
 
 ```bash
-bloch examples/01_hadamard.bloch
+basis examples/01_hadamard.bloch
 ```
 
 **Run (from source, repo root):**
 
 ```bash
-./build/bin/bloch examples/01_hadamard.bloch
+./build/dev/bin/basis examples/01_hadamard.bloch
 ```
 
 **Sample output:** A single bit, e.g. `0` or `1`, plus tracked summary if multiple shots are used.
@@ -74,13 +74,13 @@ function main() -> void {
 **Run:**
 
 ```bash
-bloch examples/02_bell_state.bloch
+basis examples/02_bell_state.bloch
 ```
 
 Or with QASM printed to stdout:
 
 ```bash
-bloch examples/02_bell_state.bloch --emit-qasm
+basis examples/02_bell_state.bloch --emit-qasm
 ```
 
 **Sample output:** A two-bit result such as `[0, 0]` or `[1, 1]` (correlated).
@@ -109,13 +109,13 @@ function main() -> void {
 **Run:** Pass the file that contains `main()` (the entry point). From the repo root:
 
 ```bash
-bloch examples/multifile/main.bloch
+basis examples/multifile/main.bloch
 ```
 
 Or with a built-from-source binary:
 
 ```bash
-./build/bin/bloch examples/multifile/main.bloch
+./build/dev/bin/basis examples/multifile/main.bloch
 ```
 
 The module loader resolves imports relative to the importing file first, then configured search
@@ -128,7 +128,7 @@ If you don’t have `bloch` on your PATH, build then run with the built binary:
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel
-./build/bin/bloch examples/02_bell_state.bloch --emit-qasm
+./build/dev/bin/basis examples/02_bell_state.bloch --emit-qasm
 ```
 
 Use `--echo=all` for verbose output during multi-shot runs.

@@ -23,12 +23,12 @@ fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
-BLOCH_BIN="${1:-${BUILD_DIR:-${ROOT_DIR}/build}/bin/bloch}"
+BLOCH_BIN="${1:-${BUILD_DIR:-${ROOT_DIR}/build}/bin/basis}"
 EXAMPLE_TIMEOUT_SECONDS="${EXAMPLE_TIMEOUT_SECONDS:-30}"
 
 if [[ ! -x "${BLOCH_BIN}" ]]; then
-  echo "Bloch executable not found or not executable: ${BLOCH_BIN}" >&2
-  echo "Build Bloch first or pass the executable path as the first argument." >&2
+  echo "Basis executable not found or not executable: ${BLOCH_BIN}" >&2
+  echo "Build Basis first or pass the executable path as the first argument." >&2
   exit 1
 fi
 if [[ ! "${EXAMPLE_TIMEOUT_SECONDS}" =~ ^[1-9][0-9]*$ ]]; then

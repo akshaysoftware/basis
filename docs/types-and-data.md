@@ -1,6 +1,6 @@
 # Types and Data
 
-Bloch has a compact set of primitives plus arrays and class references.
+Basis has a compact set of primitives plus arrays and class references.
 
 ## Primitives
 - `int`, `long`, `float`

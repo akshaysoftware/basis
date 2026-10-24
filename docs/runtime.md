@@ -1,6 +1,6 @@
-# Bloch Runtime Model
+# Basis Runtime Model
 
-Bloch executes programs with a tree-walking interpreter and an ideal statevector simulator that
+Basis executes programs with a tree-walking interpreter and an ideal statevector simulator that
 logs OpenQASM 2.0 operations.
 
 ## Execution pipeline

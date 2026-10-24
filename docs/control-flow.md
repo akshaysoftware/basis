@@ -1,6 +1,6 @@
 # Control Flow
 
-Bloch uses familiar C-style control flow. Conditions must be `boolean` or `bit` (official recommendation is to always use `boolean` for conditional logic).
+Basis uses familiar C-style control flow. Conditions must be `boolean` or `bit` (official recommendation is to always use `boolean` for conditional logic).
 
 ## Branching
 ```bloch
@@ -18,7 +18,7 @@ for (int i = 0; i < 3; i = i + 1) { ... }
 while (keepGoing) { ... }
 ```
 
-Bloch does not currently support `break` or `continue`, so structure loops accordingly.
+Basis does not currently support `break` or `continue`, so structure loops accordingly.
 
 ## Returns
 ```bloch

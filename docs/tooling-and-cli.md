@@ -1,57 +1,18 @@
-# Tooling & CLI
-
-Run programs with `bloch path/to/file.bloch`.
-
-## Exit codes
-
-- **0** — Success (program ran to completion).
-- **Non-zero** — Error (lexical, parse, semantic, or runtime). See [Errors & Diagnostics](./diagnostics.md).
-
-## Common flags
-
-- `--help` — Show usage and available options.
-- `--version` — Print the build string and check for updates.
-- `--update` — Download and install the latest release, including the bundled stdlib.
-- `--emit-qasm` — Print the emitted OpenQASM log to stdout (in addition to writing `<input>.qasm` beside your source).
-- `--shots=N` — Run the program N times and aggregate tracked values. **to be deprecated in v2.0.0;** prefer `@shots(N)` on `main()`. See [Annotations & Tracking](./annotations-and-tracking.md). If both the annotation and this flag are set, the annotation wins and the flag is ignored with a warning.
-- `--echo=auto|all|none` — Control echo output. Default `auto` suppresses echo when taking many shots; use `all` for verbose per-shot output, `none` to silence echo.
-
-Each run writes `<input>.qasm` next to your source file. The `--emit-qasm` flag only controls whether that log is also printed to stdout.
-
-## Stdlib discovery
-
-When the CLI resolves imports, it prepares search paths for the stdlib and project libraries:
-
-- If `BLOCH_STDLIB_PATH` is set, Bloch uses that root first and also checks `1.1.0`/`v1.1.0`
-  style versioned subdirectories when present.
-- Otherwise Bloch checks the platform install location for the stdlib:
-  - Linux: `$XDG_DATA_HOME/bloch/library` or `~/.local/share/bloch/library`
-  - macOS: `~/Library/Application Support/Bloch/library`
-  - Windows: `%LOCALAPPDATA%\Bloch\library`
-- Bloch also checks locations beside the installed binary plus local `./library` and `./stdlib`
-  directories in your current working directory.
-
-This is why `import bloch.lang.Object;` works immediately after a standard install.
-
-## Where is `bloch` installed?
-
-When you install via the install script (Linux/macOS or Windows), the `bloch` binary is placed in a directory on your PATH:
-
-- **Linux/macOS:** The script prefers `~/.local/bin` if it exists and is writable; otherwise `/usr/local/bin` if writable; otherwise `~/.local/bin` (created if needed). You can override with `INSTALL_DIR`, e.g. `INSTALL_DIR=$HOME/.local/bin`.
-- **Windows:** See the PowerShell install script output for the install location.
-
-To find the binary: `which bloch` (Linux/macOS) or `where bloch` (Windows).
-
-## Build from source
+# CLI
 
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --parallel
-ctest --test-dir build --output-on-failure
+basis [options] path/to/program.bloch
 ```
 
-The executable is `./build/bin/bloch`. Add it to your PATH or run it with the path when in the repo.
+- `--help`: show options.
+- `--version`: show the development version and commit.
+- `--shots=N`: execute N shots and aggregate `@tracked` values.
+- `--echo=auto|all|none`: control echo output.
+- `--emit-qasm`: also print the OpenQASM 2 execution trace to stdout.
 
-## Editor support
+`@shots(N)` on `main` takes precedence over the CLI shot count. Successful runs
+write a `.qasm` trace beside the input file. See [known issues](known-issues.md).
 
-The VS Code extension at [bloch-labs/bloch-vscode](https://github.com/bloch-labs/bloch-vscode) provides syntax highlighting.
+The bundled standard library is installed to `<prefix>/share/basis/library`.
+Set `BASIS_STDLIB_PATH` to override its search root. The inherited package name
+remains `bloch.lang`; for example, `import bloch.lang.Object;`.
